@@ -8,7 +8,9 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
-import api from "../api/api"; // ✅ API call remains
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { auth, db } from '../firebase/firebaseConfig';
 
 const RegisterScreen = ({ navigation }) => {
   const [form, setForm] = useState({
@@ -17,6 +19,7 @@ const RegisterScreen = ({ navigation }) => {
     password: "",
     firstName: "",
     lastName: "",
+    phoneNum: "Not Provided",
   });
   const [loading, setLoading] = useState(false);
 
@@ -48,16 +51,22 @@ const RegisterScreen = ({ navigation }) => {
     setLoading(true);
 
     try {
-      // ✅ API Call instead of Firestore
-      await api.post("/register", {
-        username: form.username,
+      const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      const user = userCredential.user;
+      await sendEmailVerification(user);
+
+      await setDoc(doc(db, 'users', user.uid), {
         email: form.email,
+        emailVerified: false,
         firstName: form.firstName,
         lastName: form.lastName,
-        password: form.password, // Ensure the backend handles password securely
+        numRides: 0,
+        phoneNum: form.phoneNum,
+        uid: user.uid,
+        username: form.username,
       });
 
-      Alert.alert("Success", "Registration successful!");
+      Alert.alert("Success", "Registration successful! Please verify your email.");
       navigation.navigate('Login');
     } catch (error) {
       console.error("Registration Error:", error);

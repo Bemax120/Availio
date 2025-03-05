@@ -69,7 +69,7 @@ const ProfilePage = () => {
           <Text style={styles.userName}>{user.firstName} {user.lastName}</Text>
           <View style={styles.ridesBadge}>
             <Ionicons name="bicycle" size={18} color="white" />
-            <Text style={styles.ridesText}>{user.rides} Rides</Text>
+            <Text style={styles.ridesText}>{user.numRides} Rides</Text>
           </View>
         </View>
       </View>
@@ -89,7 +89,7 @@ const ProfilePage = () => {
           <Ionicons name="call" size={20} color="#4b6584" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>Phone Number</Text>
-            <Text style={styles.infoValue}>{user.phone}</Text>
+            <Text style={styles.infoValue}>{user.phoneNum}</Text>
           </View>
         </View>
       </View>
