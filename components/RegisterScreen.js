@@ -57,16 +57,17 @@ const RegisterScreen = ({ navigation }) => {
 
       await setDoc(doc(db, 'users', user.uid), {
         email: form.email,
-        emailVerified: false,
+        emailVerified: true,
         firstName: form.firstName,
         lastName: form.lastName,
         numRides: 0,
         phoneNum: form.phoneNum,
         uid: user.uid,
+        profilePicture: "",
         username: form.username,
       });
 
-      Alert.alert("Success", "Registration successful! Please verify your email.");
+      Alert.alert("Success", "Registration successful!");
       navigation.navigate('Login');
     } catch (error) {
       console.error("Registration Error:", error);

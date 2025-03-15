@@ -1,15 +1,19 @@
-// DateTimePickerScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import RNPickerSelect from 'react-native-picker-select';
+import { collection, addDoc, doc, updateDoc, arrayUnion, setDoc } from 'firebase/firestore'; // ✅ Added missing imports
+import { db } from '../firebase/firebaseConfig';
+import { getAuth } from 'firebase/auth';
 
 export default function DateTimePickerScreen({ route, navigation }) {
-  const { pricePerDay } = route.params;
+  const { motorcycle } = route.params;
+  const auth = getAuth();
+
   const [selectedDates, setSelectedDates] = useState({});
   const [pickUpTime, setPickUpTime] = useState('10:00 AM');
   const [returnTime, setReturnTime] = useState('9:00 PM');
-  const [totalPrice, setTotalPrice] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(motorcycle.pricePerDay);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
@@ -55,9 +59,51 @@ export default function DateTimePickerScreen({ route, navigation }) {
   useEffect(() => {
     if (startDate && endDate) {
       const daysSelected = Object.keys(selectedDates).length;
-      setTotalPrice(daysSelected * Number(pricePerDay));
+      setTotalPrice(daysSelected * Number(motorcycle.pricePerDay));
     }
-  }, [selectedDates, pricePerDay]);
+  }, [selectedDates, motorcycle.pricePerDay]);
+
+  const handleBooking = async () => {
+    if (!startDate || !endDate) {
+      Alert.alert("Error", "Please select a start and end date.");
+      return;
+    }
+  
+    if (!auth.currentUser) {
+      Alert.alert("Error", "You must be logged in to book.");
+      return;
+    }
+  
+    const userId = auth.currentUser.uid;
+  
+    const bookingData = {
+      createdAt: new Date().toISOString(),
+      pickupDate: `${startDate} ${pickUpTime}`,
+      returnDate: `${endDate} ${returnTime}`,
+      renterId: userId,
+      totalPrice: totalPrice,
+      vehicleId: motorcycle.id,
+      bookingStatus: "Pending",
+    };
+  
+    try {
+      const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
+      const bookingId = bookingRef.id; 
+  
+      
+      const userBookingRef = doc(db, "users", userId, "myBooking", bookingId);
+      await setDoc(userBookingRef, { bookingId });
+  
+      Alert.alert("Success", "Your booking has been saved!");
+  
+      
+      navigation.navigate("Inquire", { bookingId, totalPrice, motorcycle });
+    } catch (error) {
+      console.error("Booking Error:", error);
+      Alert.alert("Error", "Failed to save booking. Please try again.");
+    }
+  };
+  
 
   return (
     <View style={styles.container}>
@@ -96,11 +142,8 @@ export default function DateTimePickerScreen({ route, navigation }) {
       </View>
       <View style={styles.footer}>
         <Text style={styles.priceText}>₱{totalPrice}</Text>
-        <TouchableOpacity
-          style={styles.bookButton}
-          onPress={() => navigation.navigate('Inquire', { totalPrice })}
-        >
-          <Text style={styles.bookButtonText}>Inquire Now</Text>
+        <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
+          <Text style={styles.bookButtonText}>Book Now</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -1,22 +1,61 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from "../firebase/firebaseConfig";
 
 const DashboardScreen = () => {
-  const scooters = [
-    { id: 1, name: 'Honda Beat', cc: '110cc', price: 500, image: 'path/to/image1' },
-    { id: 2, name: 'Honda Click 125i', cc: '125cc', price: 600, image: 'path/to/image2' },
-    { id: 3, name: 'Nmax/Aerox/ADV', cc: '150cc', price: 800, image: 'path/to/image3' },
-    { id: 4, name: 'Xmax', cc: '300cc', price: 2000, image: 'path/to/image4' },
-  ];
-
   const [searchText, setSearchText] = useState('');
+  const [scooters, setScooters] = useState([]);
   const navigation = useNavigation();
 
-  const handleSearch = () => {
-    navigation.navigate('MotorcycleList', { query: searchText });
+  // Fetch scooters from Firestore
+  const fetchScooters = async () => {
+    try {
+      const scootersRef = collection(db, 'vehicles');
+      const snapshot = await getDocs(scootersRef);
+      const scootersList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setScooters(scootersList);
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+    }
   };
+
+  useEffect(() => {
+    fetchScooters();
+  }, []);
+
+  // Handle search and navigate to MotorcycleList screen
+  const handleSearch = async () => {
+    if (!searchText) {
+      fetchScooters(); // Reset to full list if search is empty
+      return;
+    }
+  
+    try {
+      const lowercaseSearch = searchText.toLowerCase();
+      const scootersRef = collection(db, 'vehicles');
+      const snapshot = await getDocs(scootersRef);
+  
+      const filteredScooters = snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        .filter(scooter => scooter.name.toLowerCase().startsWith(lowercaseSearch)); // Case-insensitive prefix match
+  
+      setScooters(filteredScooters);
+    } catch (error) {
+      console.error('Error searching vehicles:', error);
+    }
+  };
+  
+  
+
 
   return (
     <ScrollView style={styles.container}>
@@ -50,21 +89,26 @@ const DashboardScreen = () => {
       </View>
 
       <View style={styles.scooterList}>
-        {scooters.map((scooter) => (
+      {scooters.length > 0 ? (
+        scooters.map((scooter) => (
           <TouchableOpacity
             key={scooter.id}
             style={styles.scooterCard}
             onPress={() => navigation.navigate('MotorcycleDetail', { motorcycle: scooter })}
           >
-            <Image source={{ uri: scooter.image }} style={styles.scooterImage} />
+            <Image source={{ uri: scooter.displayImg }} style={styles.scooterImage} />
             <Text style={styles.scooterName}>{scooter.name}</Text>
             <Text style={styles.scooterCC}>{scooter.cc}</Text>
-            <Text style={styles.scooterPrice}>{scooter.price} Per Day</Text>
+            <Text style={styles.scooterPrice}>{scooter.pricePerDay} Per Day</Text>
             <TouchableOpacity style={styles.detailsButton}>
               <Text style={styles.detailsButtonText}></Text>
             </TouchableOpacity>
           </TouchableOpacity>
-        ))}
+        ))
+      ): (
+    <Text style={styles.noResults}>No vehicles available</Text>
+    )}
+       
       </View>
     </ScrollView>
   );

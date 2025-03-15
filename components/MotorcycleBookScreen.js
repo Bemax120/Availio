@@ -1,67 +1,148 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { collection, doc, getDocs, getDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase/firebaseConfig';
+import { getAuth } from 'firebase/auth';
 
 const MotorcycleBookScreen = () => {
-  const bookings = [
-    {
-      id: 1,
-      bike: 'Honda Click 125i',
-      date: 'Aug 15 - 18, 2023',
-      status: 'Confirmed',
-      total: '₱1,800',
-    },
-    {
-      id: 2,
-      bike: 'Suzuki Raider 150',
-      date: 'Sep 1 - 5, 2023',
-      status: 'Pending',
-      total: '₱2,800',
-    },
-  ];
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('Upcoming');
+
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid;
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchBookings = async () => {
+      try {
+        const myBookingRef = collection(db, 'users', userId, 'myBooking');
+        const myBookingSnapshot = await getDocs(myBookingRef);
+
+        const bookingPromises = myBookingSnapshot.docs.map(async (docSnap) => {
+          const bookingId = docSnap.id;
+          const bookingRef = doc(db, 'bookings', bookingId);
+          const bookingSnap = await getDoc(bookingRef);
+
+          if (!bookingSnap.exists()) return null;
+
+          const bookingData = bookingSnap.data();
+          const vehicleRef = doc(db, 'vehicles', bookingData.vehicleId);
+          const vehicleSnap = await getDoc(vehicleRef);
+
+          return {
+            id: bookingId,
+            bike: vehicleSnap.exists() ? vehicleSnap.data().name : 'Unknown Vehicle',
+            image: vehicleSnap.exists() ? vehicleSnap.data().displayImg1 : null,
+            date: formatDateTime(bookingData.createdAt),
+            status: bookingData.bookingStatus,
+            total: `₱${bookingData.totalPrice}`,
+          };
+        });
+
+        const resolvedBookings = (await Promise.all(bookingPromises)).filter(Boolean);
+        setBookings(resolvedBookings);
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const formatDateTime = (timestamp) => {
+      if (!timestamp) return 'Unknown Date';
+    
+      const dateObj = new Date(timestamp);
+      
+      
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      
+      
+      let hours = dateObj.getHours();
+      const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? ' PM' : ' AM';
+      hours = hours % 12 || 12; 
+      
+      return `${year}-${month}-${day} / ${hours}:${minutes}${ampm}`;
+    };
+
+    fetchBookings();
+  }, [userId]);
+
+  const filteredBookings = bookings.filter((booking) => {
+    const isUpcoming = booking.status === 'Confirmed' || booking.status === 'Pending';
+    return filter === 'Upcoming' ? isUpcoming : !isUpcoming;
+  });
+
   const StatusBadge = ({ status }) => (
-    <View style={[
-      styles.statusBadge,
-      { backgroundColor: status === 'Confirmed' ? '#4CD964' : '#FFCC00' }
-    ]}>
+    <View style={[styles.statusBadge, { backgroundColor: status === 'Complete' ? '#4CD964' : '#FFCC00' }]}>
       <Text style={styles.statusText}>{status}</Text>
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="red" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.screenTitle}>My Bookings</Text>
-      
+
       <View style={styles.segmentContainer}>
-        <TouchableOpacity style={[styles.segmentButton, styles.activeSegment]}>
-          <Text style={styles.activeSegmentText}>Upcoming</Text>
+        <TouchableOpacity
+          style={[styles.segmentButton, filter === 'Upcoming' && styles.activeSegment]}
+          onPress={() => setFilter('Upcoming')}
+        >
+          <Text style={filter === 'Upcoming' ? styles.activeSegmentText : styles.segmentText}>Pending</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.segmentButton}>
-          <Text style={styles.segmentText}>Past</Text>
+        <TouchableOpacity
+          style={[styles.segmentButton, filter === 'Past' && styles.activeSegment]}
+          onPress={() => setFilter('Past')}
+        >
+          <Text style={filter === 'Past' ? styles.activeSegmentText : styles.segmentText}>Complete</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {bookings.map((booking) => (
-          <View key={booking.id} style={styles.bookingCard}>
+      
+      <FlatList
+        data={filteredBookings}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.scrollContainer}
+        renderItem={({ item }) => (
+          <View style={styles.bookingCard}>
+            
             <View style={styles.bookingHeader}>
               <View style={styles.bikeInfo}>
                 <Ionicons name="calendar" size={20} color="#4b6584" />
-                <Text style={styles.bookingDate}>{booking.date}</Text>
+                <Text style={styles.bookingDate}>{item.date}</Text>
               </View>
-              <StatusBadge status={booking.status} />
+              <StatusBadge status={item.status} />
             </View>
 
+            
             <View style={styles.bookingContent}>
-              <View style={styles.imagePlaceholder}>
-                <Text style={styles.placeholderText}>Image</Text>
-              </View>
+              {item.image ? (
+                <Image source={{ uri: item.image }} style={styles.bookingImage} />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <Text style={styles.placeholderText}>No Image</Text>
+                </View>
+              )}
               <View style={styles.bookingDetails}>
-                <Text style={styles.bikeName}>{booking.bike}</Text>
-                <Text style={styles.totalText}>Total: {booking.total}</Text>
+                <Text style={styles.bikeName}>{item.bike}</Text>
+                <Text style={styles.totalText}>Total: {item.total}</Text>
               </View>
             </View>
 
+            
             <View style={styles.actionButtons}>
               <TouchableOpacity style={styles.secondaryButton}>
                 <Text style={styles.secondaryButtonText}>View Details</Text>
@@ -71,151 +152,40 @@ const MotorcycleBookScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
-        ))}
-      </ScrollView>
+        )}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#333',
-    padding: 20,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE'
-  },
-  segmentContainer: {
-    flexDirection: 'row',
-    padding: 15,
-    backgroundColor: 'white',
-  },
-  imagePlaceholder: {
-    width: 100,
-    height: 80,
-    backgroundColor: 'black',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    color: 'white',
-    fontSize: 12,
-  },
-  segmentButton: {
-    flex: 1,
-    padding: 12,
-    alignItems: 'center',
-    borderRadius: 8,
-    marginHorizontal: 5,
-  },
-  activeSegment: {
-    backgroundColor: '#FF3B30',
-  },
-  segmentText: {
-    color: '#666',
-    fontWeight: '600',
-  },
-  activeSegmentText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  scrollContainer: {
-    padding: 15,
-  },
-  bookingCard: {
-    backgroundColor: 'white',
-    borderRadius: 15,
-    marginBottom: 15,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  bookingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  bikeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  bookingDate: {
-    marginLeft: 8,
-    color: 'black',
-    fontWeight: '600',
-  },
-  statusBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 15,
-  },
-  statusText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  bookingContent: {
-    flexDirection: 'row',
-    marginBottom: 15,
-  },
-  bookingImage: {
-    width: 100,
-    height: 80,
-    borderRadius: 10,
-  },
-  bookingDetails: {
-    flex: 1,
-    marginLeft: 15,
-    justifyContent: 'space-between',
-  },
-  bikeName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-  },
-  totalText: {
-    fontSize: 16,
-    color: '#4CD964',
-    fontWeight: '600',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
-  },
-  primaryButton: {
-    backgroundColor: '#FF3B30',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginLeft: 10,
-  },
-  primaryButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: 'black',
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  secondaryButtonText: {
-    color: '#4b6584',
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  screenTitle: { fontSize: 28, fontWeight: '800', color: '#333', padding: 20, backgroundColor: 'white' },
+  segmentContainer: { flexDirection: 'row', padding: 15, backgroundColor: 'white' },
+  segmentButton: { flex: 1, padding: 12, alignItems: 'center', borderRadius: 8, marginHorizontal: 5 },
+  activeSegment: { backgroundColor: '#FF3B30' },
+  segmentText: { color: '#666', fontWeight: '600' },
+  activeSegmentText: { color: 'white', fontWeight: '600' },
+  scrollContainer: { padding: 15 },
+  bookingCard: { backgroundColor: 'white', borderRadius: 15, marginBottom: 15, padding: 15, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  bookingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+  bikeInfo: { flexDirection: 'row', alignItems: 'center' },
+  bookingDate: { marginLeft: 8, color: 'black', fontWeight: '600' },
+  statusBadge: { paddingVertical: 4, paddingHorizontal: 12, borderRadius: 15 },
+  statusText: { color: 'white', fontWeight: '600', fontSize: 12 },
+  bookingContent: { flexDirection: 'row', marginBottom: 15 },
+  bookingImage: { width: 100, height: 80, borderRadius: 10 },
+  imagePlaceholder: { width: 100, height: 80, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center', borderRadius: 10 },
+  placeholderText: { color: 'white', fontSize: 12 },
+  bookingDetails: { flex: 1, marginLeft: 15, justifyContent: 'space-between' },
+  bikeName: { fontSize: 18, fontWeight: '700', color: '#333' },
+  totalText: { fontSize: 16, color: '#4CD964', fontWeight: '600' },
+  actionButtons: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
+  primaryButton: { backgroundColor: '#FF3B30', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8, marginLeft: 10 },
+  primaryButtonText: { color: 'white', fontWeight: '600' },
+  secondaryButton: { borderWidth: 1, borderColor: 'black', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8 },
+  secondaryButtonText: { color: '#4b6584', fontWeight: '600' },
+  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
 
 export default MotorcycleBookScreen;

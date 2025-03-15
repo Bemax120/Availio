@@ -1,29 +1,56 @@
-// BookingDetailScreen.js
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView, 
-  TouchableOpacity, 
-  Image 
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 
 export default function BookingDetailScreen({ route, navigation }) {
   const {
-    bookingNumber = 'SMJ00233',
-    itemName = 'Honda Beat Playful',
-    vendorName = 'Scooter Gaming PH',
-    pickUpTime = 'July 16, 2022 (10:00 AM)',
-    returnTime = 'July 16, 2022 (10:00 PM)',
-    rentalDuration = '1 Day',
-  } = route.params || {};
+    bookingNumber,
+    itemName,
+    vendorName,
+    pickupDate,
+    returnDate,
+  } = route.params;
+
+  const [rentalDuration, setRentalDuration] = useState('');
+
+  useEffect(() => {
+    const calculateDuration = () => {
+      if (!pickupDate || !returnDate) {
+        setRentalDuration('N/A');
+        return;
+      }
+
+      const parseDate = (dateString) => {
+        const [datePart, timePart, meridian] = dateString.split(' ');
+        const [year, month, day] = datePart.split('-').map(Number);
+        let [hours, minutes] = timePart.split(':').map(Number);
+
+        if (meridian === 'PM' && hours !== 12) hours += 12;
+        if (meridian === 'AM' && hours === 12) hours = 0; 
+
+        return new Date(year, month - 1, day, hours, minutes);
+      };
+
+      const pickup = parseDate(pickupDate);
+      const returnD = parseDate(returnDate);
+
+      if (!isNaN(pickup.getTime()) && !isNaN(returnD.getTime())) {
+        const diffInHours = (returnD - pickup) / (1000 * 60 * 60);
+        setRentalDuration(`${Math.ceil(diffInHours / 24)} days`);
+      } else {
+        setRentalDuration('Invalid Date');
+      }
+    };
+
+    calculateDuration();
+  }, [pickupDate, returnDate]);
+
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Booked Details</Text>
-        <Text style={styles.bookNo}>Book No. {bookingNumber}</Text>
+        <Text style={styles.bookNo}>Book ID. {bookingNumber}</Text>
       </View>
 
       <View style={styles.container}>
@@ -55,12 +82,12 @@ export default function BookingDetailScreen({ route, navigation }) {
 
         <View style={styles.infoRow}>
           <Text style={styles.label}>Pick Up Time</Text>
-          <Text style={styles.value}>{pickUpTime}</Text>
+          <Text style={styles.value}>{pickupDate}</Text>
         </View>
 
         <View style={styles.infoRow}>
           <Text style={styles.label}>Return Time</Text>
-          <Text style={styles.value}>{returnTime}</Text>
+          <Text style={styles.value}>{returnDate}</Text>
         </View>
 
         <View style={styles.infoRow}>
@@ -68,25 +95,21 @@ export default function BookingDetailScreen({ route, navigation }) {
           <Text style={styles.value}>{rentalDuration}</Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => {
-            navigation.navigate('Chat', {
-              bookingNumber,
-              bookingDate: 'Wed, 23 July 2022',
-              itemName,
-              vendorName,
-              price: 2000, // Example price, adjust as needed
-            });
-          }}
-        >
-          <Text style={styles.primaryButtonText}>Contact the Rental Office</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={() => {
+              navigation.navigate('Chat', {
+                bookingNumber,
+                itemName,
+                vendorName,
+              });
+            }}
+          >
+            <Text style={styles.primaryButtonText}>Contact the Rental Office</Text>
+          </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.secondaryButton}
-          onPress={() => navigation.goBack()}
-        >
+          style={styles.secondaryButton}>
           <Text style={styles.secondaryButtonText}>Cancel Booking</Text>
         </TouchableOpacity>
       </View>

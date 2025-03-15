@@ -1,8 +1,76 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, BackHandler } from 'react-native';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase/firebaseConfig';
+import { getAuth } from 'firebase/auth';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function InquireScreen({ route, navigation }) {
-  const { totalPrice } = route.params || {};
+  const { bookingId, totalPrice, motorcycle } = route.params;
+  const auth = getAuth();
+  const [booking, setBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    const fetchBooking = async () => {
+      if (!bookingId) return; 
+
+      try {
+        const bookingRef = doc(db, "bookings", bookingId);
+        const bookingSnap = await getDoc(bookingRef);
+
+        if (bookingSnap.exists()) {
+          setBooking({ id: bookingSnap.id, ...bookingSnap.data() });
+        } else {
+          console.error("Booking not found");
+        }
+      } catch (error) {
+        console.error("Error fetching booking:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooking();
+  }, [bookingId]);
+
+  useEffect(() => {
+    const date = new Date();
+    const options = { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' };
+    setCurrentDate(date.toLocaleDateString('en-US', options));
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        navigation.navigate('MotorcycleList');
+        return true;
+      };
+
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () => {
+        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+      };
+    }, [navigation])
+  );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <Text>Loading booking details...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <Text>Booking not found.</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -12,10 +80,10 @@ export default function InquireScreen({ route, navigation }) {
       <View style={styles.container}>
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.bookNumber}>Book No. SMJ00233</Text>
-            <Text style={styles.dateText}>Wed, 23 July 2022</Text>
+            <Text style={styles.bookNumber}>Book ID: {booking.id}</Text>
           </View>
-          <Text style={styles.itemTitle}>Honda Beat Playful</Text>
+          <Text style={styles.dateText}>{currentDate}</Text>
+          <Text style={styles.itemTitle}>{motorcycle.name}</Text>
           <Text style={styles.itemSubtitle}>Scooter Gaming PH</Text>
           <Text style={styles.price}>₱{totalPrice}</Text>
           <View style={styles.statusContainer}>
@@ -27,12 +95,15 @@ export default function InquireScreen({ route, navigation }) {
           style={styles.itemButton}
           onPress={() => {
             navigation.navigate('BookingDetail', {
-              bookingNumber: 'SMJ00233',
-              itemName: 'Honda Beat Playful',
+              bookingNumber: booking.id,
+              itemName: motorcycle.name,
               vendorName: 'Scooter Gaming PH',
-              pickUpTime: 'July 16, 2022 (10:00 AM)',
-              returnTime: 'July 16, 2022 (10:00 PM)',
-              rentalDuration: '1 Day',
+              pickupDate: booking.pickupDate?.toDate 
+                ? booking.pickupDate.toDate().toISOString() 
+                : booking.pickupDate, 
+              returnDate: booking.returnDate?.toDate 
+                ? booking.returnDate.toDate().toISOString() 
+                : booking.returnDate,
             });
           }}
         >
@@ -129,4 +200,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-}); 
+});
