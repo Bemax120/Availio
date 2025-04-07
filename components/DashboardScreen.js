@@ -2,60 +2,47 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from "../firebase/firebaseConfig";
 
 const DashboardScreen = () => {
   const [searchText, setSearchText] = useState('');
-  const [scooters, setScooters] = useState([]);
+  const [scooters, setScooters] = useState([]);  // Filtered list
+  const [allScooters, setAllScooters] = useState([]);  // Full list
   const navigation = useNavigation();
 
-  // Fetch scooters from Firestore
-  const fetchScooters = async () => {
-    try {
-      const scootersRef = collection(db, 'vehicles');
-      const snapshot = await getDocs(scootersRef);
+  useEffect(() => {
+    const scootersRef = collection(db, 'vehicles');
+
+    // Real-time listener for Firestore updates
+    const unsubscribe = onSnapshot(scootersRef, (snapshot) => {
       const scootersList = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
       setScooters(scootersList);
-    } catch (error) {
-      console.error('Error fetching vehicles:', error);
-    }
-  };
+      setAllScooters(scootersList); // Store full list for search reset
+    });
 
-  useEffect(() => {
-    fetchScooters();
+    return () => unsubscribe(); // Cleanup on unmount
   }, []);
 
-  // Handle search and navigate to MotorcycleList screen
-  const handleSearch = async () => {
+  // Handle search (filter locally instead of Firestore request)
+  const handleSearch = () => {
     if (!searchText) {
-      fetchScooters(); // Reset to full list if search is empty
+      setScooters(allScooters); // Reset to full list if search is empty
       return;
     }
-  
-    try {
-      const lowercaseSearch = searchText.toLowerCase();
-      const scootersRef = collection(db, 'vehicles');
-      const snapshot = await getDocs(scootersRef);
-  
-      const filteredScooters = snapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }))
-        .filter(scooter => scooter.name.toLowerCase().startsWith(lowercaseSearch)); // Case-insensitive prefix match
-  
-      setScooters(filteredScooters);
-    } catch (error) {
-      console.error('Error searching vehicles:', error);
-    }
+
+    const lowercaseSearch = searchText.toLowerCase();
+    const filteredScooters = allScooters.filter(scooter =>
+      scooter.name.toLowerCase().startsWith(lowercaseSearch) // Case-insensitive prefix match
+    );
+
+    setScooters(filteredScooters);
   };
   
   
-
 
   return (
     <ScrollView style={styles.container}>

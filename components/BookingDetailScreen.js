@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { doc, updateDoc } from 'firebase/firestore'; 
+import { db } from '../firebase/firebaseConfig'; 
 
 export default function BookingDetailScreen({ route, navigation }) {
   const {
@@ -44,8 +46,7 @@ export default function BookingDetailScreen({ route, navigation }) {
     calculateDuration();
   }, [pickupDate, returnDate]);
 
-
-
+  
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -95,23 +96,38 @@ export default function BookingDetailScreen({ route, navigation }) {
           <Text style={styles.value}>{rentalDuration}</Text>
         </View>
 
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => {
-              navigation.navigate('Chat', {
-                bookingNumber,
-                itemName,
-                vendorName,
-              });
-            }}
-          >
-            <Text style={styles.primaryButtonText}>Contact the Rental Office</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => {
+            navigation.navigate('Chat', {
+              bookingNumber,
+              itemName,
+              vendorName,
+            });
+          }}
+        >
+          <Text style={styles.primaryButtonText}>Contact the Rental Office</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.secondaryButton}>
+          style={styles.secondaryButton}
+          onPress={async () => {
+            try {
+              const bookingRef = doc(db, 'bookings', bookingNumber); // Reference to Firestore document
+              await updateDoc(bookingRef, {
+                bookingStatus: 'Cancel', // Update status to "Cancel"
+              });
+
+              console.log('Booking status updated to Cancel');
+              navigation.navigate('MotorcycleList'); // Navigate after updating
+            } catch (error) {
+              console.error('Error updating booking status:', error);
+            }
+          }}
+        >
           <Text style={styles.secondaryButtonText}>Cancel Booking</Text>
         </TouchableOpacity>
+
       </View>
     </SafeAreaView>
   );

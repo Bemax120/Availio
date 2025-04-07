@@ -11,17 +11,29 @@ export default function InquireScreen({ route, navigation }) {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState('');
+  const [motorcycleName, setMotorcycleName] = useState('');
+  const [bookingStatus, setBookingStatus] = useState('');
 
   useEffect(() => {
     const fetchBooking = async () => {
-      if (!bookingId) return; 
-
+      if (!bookingId) return;
+  
       try {
         const bookingRef = doc(db, "bookings", bookingId);
         const bookingSnap = await getDoc(bookingRef);
-
+  
         if (bookingSnap.exists()) {
-          setBooking({ id: bookingSnap.id, ...bookingSnap.data() });
+          const bookingData = bookingSnap.data();
+          setBooking({ id: bookingSnap.id, ...bookingData });
+          setBookingStatus(bookingData.bookingStatus); // Get bookingStatus
+  
+          const vehicleId = bookingData.vehicleId;
+          const vehicleRef = doc(db, "vehicles", vehicleId);
+          const vehicleSnap = await getDoc(vehicleRef);
+  
+          if (vehicleSnap.exists()) {
+            setMotorcycleName(vehicleSnap.data().name);
+          }
         } else {
           console.error("Booking not found");
         }
@@ -31,7 +43,7 @@ export default function InquireScreen({ route, navigation }) {
         setLoading(false);
       }
     };
-
+  
     fetchBooking();
   }, [bookingId]);
 
@@ -83,32 +95,56 @@ export default function InquireScreen({ route, navigation }) {
             <Text style={styles.bookNumber}>Book ID: {booking.id}</Text>
           </View>
           <Text style={styles.dateText}>{currentDate}</Text>
-          <Text style={styles.itemTitle}>{motorcycle.name}</Text>
+          <Text style={styles.itemTitle}>{motorcycleName || 'No Motorcycle Name'}</Text>
           <Text style={styles.itemSubtitle}>Scooter Gaming PH</Text>
           <Text style={styles.price}>₱{totalPrice}</Text>
           <View style={styles.statusContainer}>
-            <Text style={styles.statusText}>Waiting for Confirmation</Text>
+          <Text style={[
+            styles.statusText,
+            { color: bookingStatus === 'Complete' ? 'green' : 'red' }
+          ]}>
+            {bookingStatus === 'Complete' 
+              ? 'Complete' 
+              : bookingStatus === 'Cancel' 
+                ? 'Cancel' 
+                : 'Waiting for Confirmation'}
+          </Text>
           </View>
         </View>
+
+        {bookingStatus !== "Cancel" && (
+          <TouchableOpacity
+            style={styles.itemButton}
+            onPress={() => {
+              navigation.navigate('BookingDetail', {
+                bookingNumber: booking.id,
+                itemName: motorcycle.name,
+                vendorName: 'Scooter Gaming PH',
+                pickupDate: booking.pickupDate?.toDate 
+                  ? booking.pickupDate.toDate().toISOString() 
+                  : booking.pickupDate, 
+                returnDate: booking.returnDate?.toDate 
+                  ? booking.returnDate.toDate().toISOString() 
+                  : booking.returnDate,
+              });
+            }}
+          >
+            <Text style={styles.itemButtonText}>View Booking Details</Text>
+          </TouchableOpacity>
+        )}
+
 
         <TouchableOpacity
           style={styles.itemButton}
           onPress={() => {
-            navigation.navigate('BookingDetail', {
-              bookingNumber: booking.id,
-              itemName: motorcycle.name,
-              vendorName: 'Scooter Gaming PH',
-              pickupDate: booking.pickupDate?.toDate 
-                ? booking.pickupDate.toDate().toISOString() 
-                : booking.pickupDate, 
-              returnDate: booking.returnDate?.toDate 
-                ? booking.returnDate.toDate().toISOString() 
-                : booking.returnDate,
-            });
+            navigation.navigate('MotorcycleList');
+            return true;
           }}
         >
-          <Text style={styles.itemButtonText}>View Booking Details</Text>
+          <Text style={styles.itemButtonText}>Return to Dashboard</Text>
         </TouchableOpacity>
+
+
       </View>
     </SafeAreaView>
   );
@@ -175,6 +211,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   statusContainer: {
+    justifyContent: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FEE2E2',

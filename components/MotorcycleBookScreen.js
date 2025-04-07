@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, FlatList, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, doc, getDocs, getDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 import { getAuth } from 'firebase/auth';
+import { useNavigation } from '@react-navigation/native';
 
 const MotorcycleBookScreen = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('Upcoming');
+  const navigation = useNavigation(); // Initialize navigation
 
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
@@ -16,82 +18,80 @@ const MotorcycleBookScreen = () => {
   useEffect(() => {
     if (!userId) return;
 
-    const fetchBookings = async () => {
-      try {
-        const myBookingRef = collection(db, 'users', userId, 'myBooking');
-        const myBookingSnapshot = await getDocs(myBookingRef);
+    setLoading(true); // Start loading before fetching data
+    const myBookingRef = collection(db, 'users', userId, 'myBooking');
 
-        const bookingPromises = myBookingSnapshot.docs.map(async (docSnap) => {
-          const bookingId = docSnap.id;
-          const bookingRef = doc(db, 'bookings', bookingId);
-          const bookingSnap = await getDoc(bookingRef);
+    const unsubscribe = onSnapshot(myBookingRef, async (snapshot) => {
+      const bookingPromises = snapshot.docs.map(async (docSnap) => {
+        const bookingId = docSnap.id;
+        const bookingRef = doc(db, 'bookings', bookingId);
+        const bookingSnap = await getDoc(bookingRef);
 
-          if (!bookingSnap.exists()) return null;
+        if (!bookingSnap.exists()) return null;
 
-          const bookingData = bookingSnap.data();
-          const vehicleRef = doc(db, 'vehicles', bookingData.vehicleId);
-          const vehicleSnap = await getDoc(vehicleRef);
+        const bookingData = bookingSnap.data();
+        const vehicleRef = doc(db, 'vehicles', bookingData.vehicleId);
+        const vehicleSnap = await getDoc(vehicleRef);
 
-          return {
-            id: bookingId,
-            bike: vehicleSnap.exists() ? vehicleSnap.data().name : 'Unknown Vehicle',
-            image: vehicleSnap.exists() ? vehicleSnap.data().displayImg1 : null,
-            date: formatDateTime(bookingData.createdAt),
-            status: bookingData.bookingStatus,
-            total: `₱${bookingData.totalPrice}`,
-          };
-        });
+        return {
+          id: bookingId,
+          bike: vehicleSnap.exists() ? vehicleSnap.data().name : 'Unknown Vehicle',
+          image: vehicleSnap.exists() ? vehicleSnap.data().displayImg1 : null,
+          date: formatDateTime(bookingData.createdAt),
+          status: bookingData.bookingStatus,
+          total: bookingData.totalPrice,
+        };
+      });
 
-        const resolvedBookings = (await Promise.all(bookingPromises)).filter(Boolean);
-        setBookings(resolvedBookings);
-      } catch (error) {
-        console.error('Error fetching bookings:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const resolvedBookings = (await Promise.all(bookingPromises)).filter(Boolean);
+      setBookings(resolvedBookings);
+      setLoading(false); // Stop loading once data is fetched
+    });
 
-    const formatDateTime = (timestamp) => {
-      if (!timestamp) return 'Unknown Date';
+    return () => unsubscribe();
+  }, [userId, filter]); // Reload when userId or filter changes
+
+  const formatDateTime = (timestamp) => {
+    if (!timestamp) return 'Unknown Date';
+    const dateObj = new Date(timestamp);
     
-      const dateObj = new Date(timestamp);
-      
-      
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      
-      
-      let hours = dateObj.getHours();
-      const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-      const ampm = hours >= 12 ? ' PM' : ' AM';
-      hours = hours % 12 || 12; 
-      
-      return `${year}-${month}-${day} / ${hours}:${minutes}${ampm}`;
-    };
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
 
-    fetchBookings();
-  }, [userId]);
+    let hours = dateObj.getHours();
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? ' PM' : ' AM';
+    hours = hours % 12 || 12;
+
+    return `${year}-${month}-${day} / ${hours}:${minutes}${ampm}`;
+  };
+
 
   const filteredBookings = bookings.filter((booking) => {
     const isUpcoming = booking.status === 'Confirmed' || booking.status === 'Pending';
     return filter === 'Upcoming' ? isUpcoming : !isUpcoming;
   });
 
-  const StatusBadge = ({ status }) => (
-    <View style={[styles.statusBadge, { backgroundColor: status === 'Complete' ? '#4CD964' : '#FFCC00' }]}>
-      <Text style={styles.statusText}>{status}</Text>
-    </View>
-  );
-
-  if (loading) {
+  const StatusBadge = ({ status }) => {
+    let backgroundColor;
+  
+    if (status === 'Complete') {
+      backgroundColor = '#4CD964'; // Green
+    } else if (status === 'Cancel') {
+      backgroundColor = '#FF3B30'; // Red for canceled bookings
+    } else {
+      backgroundColor = '#FFCC00'; // Yellow for other statuses
+    }
+  
     return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="red" />
+      <View style={[styles.statusBadge, { backgroundColor }]}>
+        <Text style={styles.statusText}>{status}</Text>
       </View>
     );
-  }
+  };
 
+ 
   return (
     <View style={styles.container}>
       <Text style={styles.screenTitle}>My Bookings</Text>
@@ -99,61 +99,77 @@ const MotorcycleBookScreen = () => {
       <View style={styles.segmentContainer}>
         <TouchableOpacity
           style={[styles.segmentButton, filter === 'Upcoming' && styles.activeSegment]}
-          onPress={() => setFilter('Upcoming')}
+          onPress={() => {
+            setLoading(true);
+            setFilter('Upcoming');
+          }}
         >
           <Text style={filter === 'Upcoming' ? styles.activeSegmentText : styles.segmentText}>Pending</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.segmentButton, filter === 'Past' && styles.activeSegment]}
-          onPress={() => setFilter('Past')}
+          onPress={() => {
+            setLoading(true);
+            setFilter('Past');
+          }}
         >
-          <Text style={filter === 'Past' ? styles.activeSegmentText : styles.segmentText}>Complete</Text>
+          <Text style={filter === 'Past' ? styles.activeSegmentText : styles.segmentText}>Completed</Text>
         </TouchableOpacity>
       </View>
 
-      
-      <FlatList
-        data={filteredBookings}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.scrollContainer}
-        renderItem={({ item }) => (
-          <View style={styles.bookingCard}>
-            
-            <View style={styles.bookingHeader}>
-              <View style={styles.bikeInfo}>
-                <Ionicons name="calendar" size={20} color="#4b6584" />
-                <Text style={styles.bookingDate}>{item.date}</Text>
-              </View>
-              <StatusBadge status={item.status} />
-            </View>
-
-            
-            <View style={styles.bookingContent}>
-              {item.image ? (
-                <Image source={{ uri: item.image }} style={styles.bookingImage} />
-              ) : (
-                <View style={styles.imagePlaceholder}>
-                  <Text style={styles.placeholderText}>No Image</Text>
+      {loading ? (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="red" />
+        </View>
+      ) : (
+        <FlatList
+          data={filteredBookings}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.scrollContainer}
+          renderItem={({ item }) => (
+            <View style={styles.bookingCard}>
+              
+              <View style={styles.bookingHeader}>
+                <View style={styles.bikeInfo}>
+                  <Ionicons name="calendar" size={20} color="#4b6584" />
+                  <Text style={styles.bookingDate}>{item.date}</Text>
                 </View>
-              )}
-              <View style={styles.bookingDetails}>
-                <Text style={styles.bikeName}>{item.bike}</Text>
-                <Text style={styles.totalText}>Total: {item.total}</Text>
+                <StatusBadge status={item.status} />
               </View>
-            </View>
 
-            
-            <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.secondaryButton}>
+              <View style={styles.bookingContent}>
+                {item.image ? (
+                  <Image source={{ uri: item.image }} style={styles.bookingImage} />
+                ) : (
+                  <View style={styles.imagePlaceholder}>
+                    <Text style={styles.placeholderText}>No Image</Text>
+                  </View>
+                )}
+                <View style={styles.bookingDetails}>
+                  <Text style={styles.bikeName}>{item.bike}</Text>
+                  <Text style={styles.totalText}>Total: ₱ {item.total}</Text>
+                </View>
+              </View>
+
+              <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={() => {
+                  navigation.navigate('Inquire', { bookingId: item.id, totalPrice: item.total, motorcycle: item });
+                }}
+              >
                 <Text style={styles.secondaryButtonText}>View Details</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>Modify</Text>
-              </TouchableOpacity>
+
+                <TouchableOpacity style={styles.primaryButton}>
+                  <Text style={styles.primaryButtonText}>Modify</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        )}
-      />
+          )}
+        />
+      )}
     </View>
   );
 };
