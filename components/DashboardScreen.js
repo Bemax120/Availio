@@ -1,31 +1,64 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from "../firebase/firebaseConfig";
 
 const DashboardScreen = () => {
+  const route = useRoute();
   const [searchText, setSearchText] = useState('');
   const [scooters, setScooters] = useState([]);  // Filtered list
   const [allScooters, setAllScooters] = useState([]);  // Full list
   const navigation = useNavigation();
 
   useEffect(() => {
-    const scootersRef = collection(db, 'vehicles');
+    const vehiclesRef = collection(db, 'vehicles');
 
-    // Real-time listener for Firestore updates
-    const unsubscribe = onSnapshot(scootersRef, (snapshot) => {
-      const scootersList = snapshot.docs.map(doc => ({
+    const unsubscribe = onSnapshot(vehiclesRef, (snapshot) => {
+      let vehiclesList = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setScooters(scootersList);
-      setAllScooters(scootersList); // Store full list for search reset
+
+      // Apply filters if provided
+      const filters = route.params?.filters;
+      if (filters) {
+        if (filters.vehicleType !== 'all') {
+          vehiclesList = vehiclesList.filter(vehicle => {
+            if (filters.vehicleType === 'scooters') return vehicle.wheels === 2;
+            if (filters.vehicleType === 'cars') return vehicle.wheels === 4;
+            return true;
+          });
+        }
+        if (filters.brand !== 'all') {
+          vehiclesList = vehiclesList.filter(vehicle => vehicle.brand?.toLowerCase() === filters.brand);
+        }
+        if (filters.cc !== 'all') {
+          if (filters.cc === 'below125') {
+            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.cc) < 125);
+          } else if (filters.cc === '125to150') {
+            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.cc) >= 125 && Number(vehicle.cc) <= 150);
+          } else if (filters.cc === 'above150') {
+            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.cc) > 150);
+          }
+        }
+        if (filters.priceRange !== 'all') {
+          if (filters.priceRange === 'below500') {
+            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.pricePerDay) < 500);
+          } else if (filters.priceRange === '500to700') {
+            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.pricePerDay) >= 500 && Number(vehicle.pricePerDay) <= 700);
+          } else if (filters.priceRange === 'above700') {
+            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.pricePerDay) > 700);
+          }
+        }
+      }
+      setScooters(vehiclesList);
+      setAllScooters(vehiclesList);
     });
 
-    return () => unsubscribe(); // Cleanup on unmount
-  }, []);
+    return () => unsubscribe();
+  }, [route.params]);
 
   // Handle search (filter locally instead of Firestore request)
   const handleSearch = () => {

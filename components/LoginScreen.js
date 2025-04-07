@@ -88,7 +88,7 @@ const LoginScreen = ({ navigation }) => {
         await AsyncStorage.setItem("userData", JSON.stringify(finalUserData));
 
         Alert.alert("Success", `Welcome, ${finalUserData.firstName}!`);
-        navigation.replace("MotorcycleList");
+        navigation.replace("Filter");
       } else {
         throw new Error("User data not found in Firestore");
       }

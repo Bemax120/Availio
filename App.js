@@ -19,6 +19,7 @@ import PaymentSuccessScreen from './components/PaymentSuccessScreen';
 import InquireScreen from './components/InquireScreen';
 import BookingDetailScreen from './components/BookingDetailScreen';
 import ChatScreen from './components/ChatScreen';
+import EnhancedFilterScreen from './components/EnhancedFilterScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -33,10 +34,10 @@ function HomeTabs() {
             iconName = 'home';
           } else if (route.name === 'Favorite') {
             iconName = 'heart';
-          } else if (route.name === 'Account') {
-            iconName = 'person';
           } else if (route.name === 'Book') {
             iconName = 'book';
+          } else if (route.name === 'Account') {
+            iconName = 'person';
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -52,36 +53,29 @@ function HomeTabs() {
   );
 }
 
-export default function App() {
+const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="MotorcycleList" component={HomeTabs} options={{ headerShown: false }} />
-        <Stack.Screen name="MotorcycleFavoritesScreen" component={HomeTabs} options={{ headerShown: false }} />
-        <Stack.Screen name="MotorcycleBookScreen" component={HomeTabs} options={{ headerShown: false }} />
-        <Stack.Screen name="ProfilePage" component={HomeTabs} options={{ headerShown: false }} />
+        <Stack.Screen name="Filter" component={EnhancedFilterScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="HomeTabs" component={HomeTabs} options={{ headerShown: false }} />
+        <Stack.Screen name="MotorcycleList" component={MotorcycleListScreen} options={{ headerShown: false }} />
         <Stack.Screen name="MotorcycleDetail" component={MotorcycleDetailScreen} />
         <Stack.Screen name="DateTimePicker" component={DateTimePickerScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
         <Stack.Screen name="PaymentDetails" component={PaymentDetailsScreen} />
         <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} />
-        <Stack.Screen
-          name="Inquire"
-          component={InquireScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="BookingDetail"
-          component={BookingDetailScreen}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="Inquire" component={InquireScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="BookingDetail" component={BookingDetailScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+};
+
+export default App;
 
 const styles = StyleSheet.create({
   container: {
