@@ -10,7 +10,7 @@ const MotorcycleBookScreen = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('Upcoming');
-  const navigation = useNavigation(); // Initialize navigation
+  const navigation = useNavigation(); 
 
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
@@ -18,7 +18,7 @@ const MotorcycleBookScreen = () => {
   useEffect(() => {
     if (!userId) return;
 
-    setLoading(true); // Start loading before fetching data
+    setLoading(true); 
     const myBookingRef = collection(db, 'users', userId, 'myBooking');
 
     const unsubscribe = onSnapshot(myBookingRef, async (snapshot) => {
@@ -36,7 +36,7 @@ const MotorcycleBookScreen = () => {
         return {
           id: bookingId,
           bike: vehicleSnap.exists() ? vehicleSnap.data().name : 'Unknown Vehicle',
-          image: vehicleSnap.exists() ? vehicleSnap.data().displayImg1 : null,
+          image: vehicleSnap.exists() ? vehicleSnap.data().defaultImg : null,
           date: formatDateTime(bookingData.createdAt),
           status: bookingData.bookingStatus,
           total: bookingData.totalPrice,
@@ -45,11 +45,11 @@ const MotorcycleBookScreen = () => {
 
       const resolvedBookings = (await Promise.all(bookingPromises)).filter(Boolean);
       setBookings(resolvedBookings);
-      setLoading(false); // Stop loading once data is fetched
+      setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [userId, filter]); // Reload when userId or filter changes
+  }, [userId, filter]);
 
   const formatDateTime = (timestamp) => {
     if (!timestamp) return 'Unknown Date';
@@ -77,11 +77,11 @@ const MotorcycleBookScreen = () => {
     let backgroundColor;
   
     if (status === 'Complete') {
-      backgroundColor = '#4CD964'; // Green
+      backgroundColor = '#4CD964'; 
     } else if (status === 'Cancel') {
-      backgroundColor = '#FF3B30'; // Red for canceled bookings
+      backgroundColor = '#FF3B30'; 
     } else {
-      backgroundColor = '#FFCC00'; // Yellow for other statuses
+      backgroundColor = '#FFCC00'; 
     }
   
     return (
@@ -162,7 +162,10 @@ const MotorcycleBookScreen = () => {
                 <Text style={styles.secondaryButtonText}>View Details</Text>
               </TouchableOpacity>
 
-                <TouchableOpacity style={styles.primaryButton}>
+                <TouchableOpacity style={styles.primaryButton}
+                onPress={() => {
+                  navigation.navigate('Inquire', { bookingId: item.id, totalPrice: item.total, motorcycle: item });
+                }}>
                   <Text style={styles.primaryButtonText}>Modify</Text>
                 </TouchableOpacity>
               </View>

@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native"; // ✅ Import navigation hook
+import { useNavigation } from "@react-navigation/native"; 
 
-const defaultProfileImage = require("../assets/download.png"); // ✅ Import default image
+const defaultProfileImage = require("../assets/download.png"); 
 
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigation = useNavigation(); // ✅ Use navigation hook
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -34,11 +34,11 @@ const ProfilePage = () => {
     fetchUserData();
   }, []);
 
-  // ✅ Logout function (outside useEffect)
+  
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem("userData"); // ✅ Clear user session
-      navigation.replace("Login"); // ✅ Navigate to Login page
+      await AsyncStorage.removeItem("userData"); 
+      navigation.replace("Login"); 
     } catch (error) {
       console.error("❌ Logout Error:", error);
       Alert.alert("Error", "Failed to log out. Please try again.");

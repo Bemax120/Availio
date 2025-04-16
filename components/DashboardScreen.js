@@ -1,84 +1,104 @@
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput, RefreshControl, BackHandler } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from "../firebase/firebaseConfig";
 
 const DashboardScreen = () => {
-  const route = useRoute();
   const [searchText, setSearchText] = useState('');
-  const [scooters, setScooters] = useState([]);  // Filtered list
-  const [allScooters, setAllScooters] = useState([]);  // Full list
+  const [scooters, setScooters] = useState([]);
+  const [allScooters, setAllScooters] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const vehiclesRef = collection(db, 'vehicles');
+  // Function to fetch scooters from Firestore
+  const fetchScooters = useCallback(() => {
+    const scootersRef = collection(db, 'vehicles');
 
-    const unsubscribe = onSnapshot(vehiclesRef, (snapshot) => {
-      let vehiclesList = snapshot.docs.map(doc => ({
+    const unsubscribe = onSnapshot(scootersRef, (snapshot) => {
+      const scootersList = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
-
-      // Apply filters if provided
-      const filters = route.params?.filters;
-      if (filters) {
-        if (filters.vehicleType !== 'all') {
-          vehiclesList = vehiclesList.filter(vehicle => {
-            if (filters.vehicleType === 'scooters') return vehicle.wheels === 2;
-            if (filters.vehicleType === 'cars') return vehicle.wheels === 4;
-            return true;
-          });
-        }
-        if (filters.brand !== 'all') {
-          vehiclesList = vehiclesList.filter(vehicle => vehicle.brand?.toLowerCase() === filters.brand);
-        }
-        if (filters.cc !== 'all') {
-          if (filters.cc === 'below125') {
-            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.cc) < 125);
-          } else if (filters.cc === '125to150') {
-            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.cc) >= 125 && Number(vehicle.cc) <= 150);
-          } else if (filters.cc === 'above150') {
-            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.cc) > 150);
-          }
-        }
-        if (filters.priceRange !== 'all') {
-          if (filters.priceRange === 'below500') {
-            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.pricePerDay) < 500);
-          } else if (filters.priceRange === '500to700') {
-            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.pricePerDay) >= 500 && Number(vehicle.pricePerDay) <= 700);
-          } else if (filters.priceRange === 'above700') {
-            vehiclesList = vehiclesList.filter(vehicle => Number(vehicle.pricePerDay) > 700);
-          }
-        }
-      }
-      setScooters(vehiclesList);
-      setAllScooters(vehiclesList);
+      setScooters(scootersList);
+      setAllScooters(scootersList);
     });
 
-    return () => unsubscribe();
-  }, [route.params]);
+    return unsubscribe;
+  }, []);
 
-  // Handle search (filter locally instead of Firestore request)
+  
+
+  // Fetch scooters when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      const unsubscribe = fetchScooters();
+      return () => unsubscribe();
+    }, [fetchScooters])
+  );
+
+  // Handle search input change
   const handleSearch = () => {
     if (!searchText) {
-      setScooters(allScooters); // Reset to full list if search is empty
+      setScooters(allScooters);  // Reset to all scooters if search is empty
       return;
     }
 
     const lowercaseSearch = searchText.toLowerCase();
     const filteredScooters = allScooters.filter(scooter =>
-      scooter.name.toLowerCase().startsWith(lowercaseSearch) // Case-insensitive prefix match
+      scooter.name.toLowerCase().startsWith(lowercaseSearch)
     );
 
     setScooters(filteredScooters);
   };
+
+  // Handle pull to refresh
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchScooters();
+    setRefreshing(false);
+  }, [fetchScooters]);
+
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        navigation.navigate('Filter'); 
+        return true;
+      };
+
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () => {
+        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+      };
+    }, [navigation])
+  );
+
+  
+  useEffect(() => {
+    if (!searchText) {
+      setScooters(allScooters);
+      return;
+    }
+
+    const lowercaseSearch = searchText.toLowerCase();
+    const filteredScooters = allScooters.filter(scooter =>
+      scooter.name.toLowerCase().includes(lowercaseSearch)
+    );
+
+    setScooters(filteredScooters);
+  }, [searchText, allScooters]);
   
   
 
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} 
+    refreshControl={
+      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+    }>
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchBar}
@@ -116,7 +136,7 @@ const DashboardScreen = () => {
             style={styles.scooterCard}
             onPress={() => navigation.navigate('MotorcycleDetail', { motorcycle: scooter })}
           >
-            <Image source={{ uri: scooter.displayImg }} style={styles.scooterImage} />
+            <Image source={{ uri: scooter.defaultImg }} style={styles.scooterImage} />
             <Text style={styles.scooterName}>{scooter.name}</Text>
             <Text style={styles.scooterCC}>{scooter.cc}</Text>
             <Text style={styles.scooterPrice}>{scooter.pricePerDay} Per Day</Text>

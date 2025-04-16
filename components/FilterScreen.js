@@ -4,17 +4,17 @@ import { useNavigation } from '@react-navigation/native';
 
 const FilterScreen = () => {
   const navigation = useNavigation();
-  const [selectedFilter, setSelectedFilter] = useState('all'); // Options: 'all', 'scooters', 'cars'
+  const [selectedFilter, setSelectedFilter] = useState('all');
 
   const applyFilter = () => {
-    // Determine the wheels filter based on selection
+    
     let wheels;
     if (selectedFilter === 'scooters') {
       wheels = 2;
     } else if (selectedFilter === 'cars') {
       wheels = 4;
     }
-    // Pass both the wheels filter and the selected filter string to the next screen
+    
     navigation.navigate('Dashboard', { wheelsFilter: wheels, selectedFilter });
   };
 

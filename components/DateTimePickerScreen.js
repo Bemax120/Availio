@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Modal } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import RNPickerSelect from 'react-native-picker-select';
-import { collection, addDoc, doc, updateDoc, arrayUnion, setDoc } from 'firebase/firestore'; // ✅ Added missing imports
+import { collection, addDoc, doc, updateDoc, arrayUnion, setDoc } from 'firebase/firestore'; 
 import { db } from '../firebase/firebaseConfig';
 import { getAuth } from 'firebase/auth';
 
@@ -16,6 +16,8 @@ export default function DateTimePickerScreen({ route, navigation }) {
   const [totalPrice, setTotalPrice] = useState(motorcycle.pricePerDay);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [loading, setLoading] = useState(false);
+
 
   const onDayPress = (day) => {
     if (!startDate || (startDate && endDate)) {
@@ -75,7 +77,6 @@ export default function DateTimePickerScreen({ route, navigation }) {
     }
   
     const userId = auth.currentUser.uid;
-  
     const bookingData = {
       createdAt: new Date().toISOString(),
       pickupDate: `${startDate} ${pickUpTime}`,
@@ -86,23 +87,26 @@ export default function DateTimePickerScreen({ route, navigation }) {
       bookingStatus: "Pending",
     };
   
+    setLoading(true); // Show loading
+  
     try {
       const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
-      const bookingId = bookingRef.id; 
-  
+      const bookingId = bookingRef.id;
       
       const userBookingRef = doc(db, "users", userId, "myBooking", bookingId);
       await setDoc(userBookingRef, { bookingId });
   
+      setLoading(false); // Hide loading
       Alert.alert("Success", "Your booking has been saved!");
   
-      
-      navigation.navigate("Inquire", { bookingId, totalPrice, motorcycle });
+        navigation.navigate("Inquire", { bookingId, totalPrice, motorcycle });
     } catch (error) {
       console.error("Booking Error:", error);
+      setLoading(false); // Hide loading even on error
       Alert.alert("Error", "Failed to save booking. Please try again.");
     }
   };
+  
   
 
   return (
@@ -146,6 +150,18 @@ export default function DateTimePickerScreen({ route, navigation }) {
           <Text style={styles.bookButtonText}>Book Now</Text>
         </TouchableOpacity>
       </View>
+      <Modal visible={loading} transparent animationType="fade">
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <ActivityIndicator size="large" color="red" />
+          <Text style={{ color: 'white', marginTop: 10 }}>Processing your booking...</Text>
+        </View>
+      </Modal>
+
     </View>
   );
 }

@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 
 const MotorcycleDetailScreen = ({ route, navigation }) => {
   const { motorcycle } = route.params;
@@ -8,9 +10,22 @@ const MotorcycleDetailScreen = ({ route, navigation }) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.imageCarousel}>
-        <Image source={{ uri: motorcycle.image }} style={styles.image} />
-        {/* Add more images if needed */}
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+        >
+          {motorcycle.images && motorcycle.images.map((imageUrl, index) => (
+            <Image
+              key={index}
+              source={{ uri: imageUrl }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          ))}
+        </ScrollView>
       </View>
+
 
       <View style={styles.detailsContainer}>
         <Text style={styles.name}>{motorcycle.name}</Text>
@@ -47,12 +62,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   imageCarousel: {
-    height: 200,
-    backgroundColor: '#f0f0f0',
+    height: 250,
+    backgroundColor: '#eee',
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: width, 
+    height: 265,
   },
   detailsContainer: {
     padding: 20,
