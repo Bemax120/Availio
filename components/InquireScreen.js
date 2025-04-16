@@ -25,7 +25,7 @@ export default function InquireScreen({ route, navigation }) {
         if (bookingSnap.exists()) {
           const bookingData = bookingSnap.data();
           setBooking({ id: bookingSnap.id, ...bookingData });
-          setBookingStatus(bookingData.bookingStatus); // Get bookingStatus
+          setBookingStatus(bookingData.bookingStatus); 
   
           const vehicleId = bookingData.vehicleId;
           const vehicleRef = doc(db, "vehicles", vehicleId);
@@ -56,7 +56,7 @@ export default function InquireScreen({ route, navigation }) {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        navigation.navigate('MotorcycleList');
+        navigation.navigate('HomeTabs', { screen: 'Home' });
         return true;
       };
 
@@ -137,7 +137,7 @@ export default function InquireScreen({ route, navigation }) {
         <TouchableOpacity
           style={styles.itemButton}
           onPress={() => {
-            navigation.navigate('MotorcycleList');
+            navigation.navigate('HomeTabs', { screen: 'Home' });
             return true;
           }}
         >

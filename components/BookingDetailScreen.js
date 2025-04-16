@@ -113,13 +113,12 @@ export default function BookingDetailScreen({ route, navigation }) {
           style={styles.secondaryButton}
           onPress={async () => {
             try {
-              const bookingRef = doc(db, 'bookings', bookingNumber); // Reference to Firestore document
+              const bookingRef = doc(db, 'bookings', bookingNumber); 
               await updateDoc(bookingRef, {
-                bookingStatus: 'Cancel', // Update status to "Cancel"
+                bookingStatus: 'Cancel', 
               });
 
-              console.log('Booking status updated to Cancel');
-              navigation.navigate('MotorcycleList'); // Navigate after updating
+              navigation.navigate('HomeTabs', { screen: 'Home' }); 
             } catch (error) {
               console.error('Error updating booking status:', error);
             }

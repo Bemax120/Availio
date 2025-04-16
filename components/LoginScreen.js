@@ -18,20 +18,20 @@ import { auth, db } from "../firebase/firebaseConfig";
 const defaultProfileImage = require("../assets/download.png");
 
 const LoginScreen = ({ navigation }) => {
-  const [identifier, setIdentifier] = useState(""); // Email or username
+  const [identifier, setIdentifier] = useState(""); 
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch email if the user enters a username
+
   const fetchEmailFromUsername = async (username) => {
     try {
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("username", "==", username));
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
-        return querySnapshot.docs[0].data().email; // Return the first matched email
+        return querySnapshot.docs[0].data().email;
       }
-      return null; // Username not found
+      return null; 
     } catch (error) {
       console.error("Error fetching email:", error);
       return null;
@@ -47,7 +47,7 @@ const LoginScreen = ({ navigation }) => {
     setLoading(true);
     let emailToUse = identifier;
 
-    // If identifier is a username, get the email
+    
     if (!identifier.includes("@")) {
       const foundEmail = await fetchEmailFromUsername(identifier);
       if (!foundEmail) {
@@ -63,13 +63,13 @@ const LoginScreen = ({ navigation }) => {
       const userCredential = await signInWithEmailAndPassword(auth, emailToUse, password);
       const user = userCredential.user;
 
-      // Fetch user data from Firestore
+      
       const userDoc = await getDoc(doc(db, "users", user.uid));
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
 
-        // ✅ Check if emailVerify is true in Firestore
+        
         if (!userData.emailVerified) {
           setLoading(false);
           Alert.alert("Error", "Please verify your email before logging in.");
@@ -78,17 +78,17 @@ const LoginScreen = ({ navigation }) => {
 
         console.log("✅ Login Success:", userData);
 
-        // Set default profile image if null
+        
         const finalUserData = {
           ...userData,
           profileImage: userData.profileImage || Image.resolveAssetSource(defaultProfileImage).uri,
         };
 
-        // ✅ Save user data to AsyncStorage
+        
         await AsyncStorage.setItem("userData", JSON.stringify(finalUserData));
 
         Alert.alert("Success", `Welcome, ${finalUserData.firstName}!`);
-        navigation.replace("MotorcycleList");
+        navigation.replace("Filter");
       } else {
         throw new Error("User data not found in Firestore");
       }
