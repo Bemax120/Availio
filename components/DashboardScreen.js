@@ -1,12 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput, RefreshControl, BackHandler } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { collection, onSnapshot } from 'firebase/firestore';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  RefreshControl,
+  BackHandler,
+} from "react-native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 
 const DashboardScreen = () => {
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [scooters, setScooters] = useState([]);
   const [allScooters, setAllScooters] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -14,10 +24,10 @@ const DashboardScreen = () => {
 
   // Function to fetch scooters from Firestore
   const fetchScooters = useCallback(() => {
-    const scootersRef = collection(db, 'vehicles');
+    const scootersRef = collection(db, "vehicles");
 
     const unsubscribe = onSnapshot(scootersRef, (snapshot) => {
-      const scootersList = snapshot.docs.map(doc => ({
+      const scootersList = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
@@ -27,8 +37,6 @@ const DashboardScreen = () => {
 
     return unsubscribe;
   }, []);
-
-  
 
   // Fetch scooters when the screen is focused
   useFocusEffect(
@@ -41,12 +49,12 @@ const DashboardScreen = () => {
   // Handle search input change
   const handleSearch = () => {
     if (!searchText) {
-      setScooters(allScooters);  // Reset to all scooters if search is empty
+      setScooters(allScooters); // Reset to all scooters if search is empty
       return;
     }
 
     const lowercaseSearch = searchText.toLowerCase();
-    const filteredScooters = allScooters.filter(scooter =>
+    const filteredScooters = allScooters.filter((scooter) =>
       scooter.name.toLowerCase().startsWith(lowercaseSearch)
     );
 
@@ -60,23 +68,21 @@ const DashboardScreen = () => {
     setRefreshing(false);
   }, [fetchScooters]);
 
-  
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        navigation.navigate('Filter'); 
+        navigation.navigate("Filter");
         return true;
       };
 
-      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      BackHandler.addEventListener("hardwareBackPress", onBackPress);
 
       return () => {
-        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
       };
     }, [navigation])
   );
 
-  
   useEffect(() => {
     if (!searchText) {
       setScooters(allScooters);
@@ -84,21 +90,20 @@ const DashboardScreen = () => {
     }
 
     const lowercaseSearch = searchText.toLowerCase();
-    const filteredScooters = allScooters.filter(scooter =>
+    const filteredScooters = allScooters.filter((scooter) =>
       scooter.name.toLowerCase().includes(lowercaseSearch)
     );
 
     setScooters(filteredScooters);
   }, [searchText, allScooters]);
-  
-  
-
 
   return (
-    <ScrollView style={styles.container} 
-    refreshControl={
-      <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-    }>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchBar}
@@ -112,43 +117,62 @@ const DashboardScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bannerContainer}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.bannerContainer}
+      >
         <View style={styles.banner}>
-          <Text style={styles.bannerText}>Enjoy Scooter Gaming Services and pay easily</Text>
+          <Text style={styles.bannerText}>
+            Enjoy Scooter Gaming Services and pay easily
+          </Text>
         </View>
         <View style={styles.banner}>
-          <Text style={styles.bannerText}>Enjoy Scooter Gaming Services and pay easily</Text>
+          <Text style={styles.bannerText}>
+            Enjoy Scooter Gaming Services and pay easily
+          </Text>
         </View>
       </ScrollView>
 
       <View style={styles.unitsContainer}>
-        <Text style={styles.unitsTitle}>Our Units</Text>
+        <Text style={styles.unitsTitle}>Available Units</Text>
         <TouchableOpacity>
           <Text style={styles.seeAllText}>See All</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.scooterList}>
-      {scooters.length > 0 ? (
-        scooters.map((scooter) => (
-          <TouchableOpacity
-            key={scooter.id}
-            style={styles.scooterCard}
-            onPress={() => navigation.navigate('MotorcycleDetail', { motorcycle: scooter })}
-          >
-            <Image source={{ uri: scooter.defaultImg }} style={styles.scooterImage} />
-            <Text style={styles.scooterName}>{scooter.name}</Text>
-            <Text style={styles.scooterCC}>{scooter.cc}</Text>
-            <Text style={styles.scooterPrice}>{scooter.pricePerDay} Per Day</Text>
-            <TouchableOpacity style={styles.detailsButton}>
-              <Text style={styles.detailsButtonText}></Text>
+        {scooters.length > 0 ? (
+          scooters.map((scooter) => (
+            <TouchableOpacity
+              key={scooter.id}
+              style={styles.scooterCard}
+              onPress={() =>
+                navigation.navigate("MotorcycleDetail", { motorcycle: scooter })
+              }
+            >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {scooter.images.map((imgUrl, index) => (
+                  <Image
+                    key={index}
+                    source={{ uri: imgUrl }}
+                    style={styles.scooterImage}
+                  />
+                ))}
+              </ScrollView>
+
+              <View style={styles.floatingBox}>
+                <Text style={styles.floatingText}>
+                  ₱{scooter.pricePerDay}/day
+                </Text>
+              </View>
+
+              <Text style={styles.scooterName}>{scooter.name}</Text>
             </TouchableOpacity>
-          </TouchableOpacity>
-        ))
-      ): (
-    <Text style={styles.noResults}>No vehicles available</Text>
-    )}
-       
+          ))
+        ) : (
+          <Text style={styles.noResults}>No vehicles available</Text>
+        )}
       </View>
     </ScrollView>
   );
@@ -157,96 +181,135 @@ const DashboardScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
+
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
+
   searchBar: {
     flex: 1,
     height: 40,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 10,
   },
+
   searchIcon: {
     marginLeft: 10,
   },
+
   bannerContainer: {
     marginVertical: 10,
   },
+
   banner: {
     width: 300,
     height: 150,
-    backgroundColor: '#d1d8e0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#d1d8e0",
+    justifyContent: "center",
+    alignItems: "center",
     marginHorizontal: 5,
   },
+
   bannerText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
+
   unitsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     padding: 15,
   },
+
   unitsTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
+
   seeAllText: {
-    color: 'red',
+    color: "red",
   },
+
   scooterList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    padding: 10,
+    flexDirection: "col",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 10,
   },
+
   scooterCard: {
-    width: '48%',
-    backgroundColor: '#f9f9f9',
+    position: "relative",
+    backgroundColor: "#FFFFFF",
+    width: "100%",
     borderRadius: 10,
     padding: 10,
-    marginBottom: 10,
-    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 2,
   },
-  scooterImage: {
-    width: 100,
-    height: 100,
-    marginBottom: 10,
+
+  floatingBox: {
+    position: "absolute",
+    right: 10,
+    bottom: "10%",
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
+    backgroundColor: "#FFFFFF",
+    padding: 10,
+    width: "32%",
+    height: "20%",
+    borderRadius: 5,
+    zIndex: 10,
+    color: "red",
+    elevation: 2,
   },
-  scooterName: {
+
+  floatingText: {
+    font: "bold",
+    color: "#8B0000",
     fontSize: 16,
-    fontWeight: 'bold',
   },
+
+  scooterImage: {
+    width: 300,
+    height: 200,
+    borderRadius: 10,
+    marginRight: 10,
+  },
+
+  scooterName: {
+    marginTop: 15,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
   scooterCC: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
-  scooterPrice: {
-    fontSize: 16,
-    color: 'red',
-    marginBottom: 10,
-  },
+
   detailsButton: {
-    backgroundColor: 'red',
+    backgroundColor: "red",
     borderRadius: 20,
     padding: 5,
   },
+
   detailsButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
   },
 });
 
-export default DashboardScreen; 
+export default DashboardScreen;
