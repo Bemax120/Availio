@@ -12,7 +12,13 @@ import {
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { collection, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  doc,
+  getDoc,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
@@ -27,11 +33,53 @@ const DashboardScreen = () => {
   const fetchScooters = useCallback(() => {
     const scootersRef = collection(db, "vehicles");
 
-    const unsubscribe = onSnapshot(scootersRef, (snapshot) => {
-      const scootersList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+    const unsubscribe = onSnapshot(scootersRef, async (snapshot) => {
+      const scooterPromises = snapshot.docs.map(async (scooterDoc) => {
+        const scooterData = scooterDoc.data();
+        const scooterId = scooterDoc.id;
+
+        let supplierData = null;
+        let averageRating = null;
+
+        try {
+          const supplierRef = doc(db, "users", scooterData.ownerId);
+          const supplierSnap = await getDoc(supplierRef);
+
+          if (supplierSnap.exists()) {
+            supplierData = supplierSnap.data();
+
+            // Fetch ratings from subcollection
+            const ratingsRef = collection(
+              db,
+              "users",
+              scooterData.ownerId,
+              "supplierRatings"
+            );
+            const ratingsSnap = await getDocs(ratingsRef);
+
+            const ratings = ratingsSnap.docs
+              .map((doc) => doc.data().rating)
+              .filter(Boolean);
+            if (ratings.length > 0) {
+              const total = ratings.reduce((sum, val) => sum + val, 0);
+              averageRating = total / ratings.length;
+            }
+          }
+        } catch (err) {
+          console.warn("Error fetching supplier or rating:", err);
+        }
+
+        return {
+          id: scooterId,
+          ...scooterData,
+          businessProfile: supplierData?.businessProfile || null,
+          businessVerified: supplierData?.businessVerified || false,
+          businessName: supplierData?.businessName || "Unknown",
+          supplierRating: averageRating,
+        };
+      });
+
+      const scootersList = await Promise.all(scooterPromises);
       setScooters(scootersList);
       setAllScooters(scootersList);
     });
@@ -206,11 +254,27 @@ const DashboardScreen = () => {
                 <Icon name="location-pin" size={16} color="#4a5565" />
                 <Text style={styles.locationText}>{scooter.location}</Text>
               </View>
-              {scooter.userRating ? (
-                <Text></Text>
-              ) : (
-                <Text style={styles.userRatingText}>No User Ratings</Text>
-              )}
+
+              <View style={styles.businessDetail}>
+                <Image
+                  source={{ uri: scooter?.businessProfile }}
+                  style={styles.smallIcon}
+                />
+                <Text style={styles.businessText}>{scooter.businessName}</Text>
+                {scooter.businessVerified ? (
+                  <Icon name="verified" size={16} color="#4a5565" />
+                ) : (
+                  <Icon name="help" size={16} color="#4a5565" />
+                )}
+              </View>
+
+              <View style={styles.businessRating}>
+                <Text style={styles.businessText}>
+                  {scooter.supplierRating}
+                </Text>
+                <Icon name="star" size={16} color="#FFD700" />
+                <Text style={styles.businessText}>Supplier Rating</Text>
+              </View>
             </TouchableOpacity>
           ))
         ) : (
@@ -225,6 +289,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+
+  smallIcon: {
+    width: 25,
+    height: 25,
+    borderRadius: 100,
+  },
+
+  businessRating: {
+    flexDirection: "row",
+    alignItems: "center",
+    color: "#4a5565",
+    marginTop: 5,
+  },
+
+  businessDetail: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+    gap: 5,
+  },
+
+  businessText: {
+    color: "#4a5565",
+    fontSize: 12,
   },
 
   starLocation: {
@@ -334,7 +423,7 @@ const styles = StyleSheet.create({
 
   floatingText: {
     font: "bold",
-    color: "#8B0000",
+    color: "#EF0000",
     fontSize: 16,
   },
 
@@ -346,7 +435,6 @@ const styles = StyleSheet.create({
   },
 
   scooterName: {
-    marginTop: 15,
     fontSize: 16,
     fontWeight: "bold",
   },

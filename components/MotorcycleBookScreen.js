@@ -149,7 +149,7 @@ const MotorcycleBookScreen = () => {
                     : styles.segmentText
                 }
               >
-                {item === "Upcoming" ? "Pending" : item}
+                {item === "On-Going" ? "Pending" : item}
               </Text>
             </TouchableOpacity>
           ))}
@@ -206,18 +206,31 @@ const MotorcycleBookScreen = () => {
                   <Text style={styles.secondaryButtonText}>View Details</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.primaryButton}
-                  onPress={() => {
-                    navigation.navigate("Inquire", {
-                      bookingId: item.id,
-                      totalPrice: item.total,
-                      motorcycle: item,
-                    });
-                  }}
-                >
-                  <Text style={styles.primaryButtonText}>Modify</Text>
-                </TouchableOpacity>
+                {item.status === "Complete" ? (
+                  <TouchableOpacity
+                    style={styles.primaryButton}
+                    onPress={() => {
+                      navigation.navigate("Rating", {
+                        bookingId: item.id,
+                      });
+                    }}
+                  >
+                    <Text style={styles.primaryButtonText}>Rate</Text>
+                  </TouchableOpacity>
+                ) : item.status === "On-Going" ? (
+                  <TouchableOpacity
+                    style={styles.primaryButton}
+                    onPress={() => {
+                      navigation.navigate("Inquire", {
+                        bookingId: item.id,
+                        totalPrice: item.total,
+                        motorcycle: item,
+                      });
+                    }}
+                  >
+                    <Text style={styles.primaryButtonText}>Extend</Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
             </View>
           )}
