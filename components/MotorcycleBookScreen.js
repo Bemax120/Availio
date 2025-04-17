@@ -39,8 +39,16 @@ const MotorcycleBookScreen = () => {
         if (!bookingSnap.exists()) return null;
 
         const bookingData = bookingSnap.data();
+
         const vehicleRef = doc(db, "vehicles", bookingData.vehicleId);
         const vehicleSnap = await getDoc(vehicleRef);
+
+        if (!vehicleSnap.exists()) return null;
+
+        const ownerData = vehicleSnap.data();
+
+        const ownerRef = doc(db, "users", ownerData.ownerId);
+        const ownerSnap = await getDoc(ownerRef);
 
         return {
           id: bookingId,
@@ -52,6 +60,24 @@ const MotorcycleBookScreen = () => {
           status: bookingData.bookingStatus,
           total: bookingData.totalPrice,
           rated: bookingData.rated,
+          businessName: ownerSnap.exists()
+            ? ownerSnap.data().businessName
+            : null,
+          businessProfile: ownerSnap.exists()
+            ? ownerSnap.data().businessProfile
+            : null,
+          businessEmail: ownerSnap.exists()
+            ? ownerSnap.data().businessEmail
+            : null,
+          businessAddress: ownerSnap.exists()
+            ? ownerSnap.data().businessAddress
+            : null,
+          emailVerified: ownerSnap.exists()
+            ? ownerSnap.data().businessVerified
+            : null,
+          contactNumber: ownerSnap.exists()
+            ? ownerSnap.data().contactNumber
+            : null,
         };
       });
 

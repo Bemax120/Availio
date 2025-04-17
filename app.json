@@ -20,10 +20,20 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDuMcil6MODKv7AVdkY2AXM4X-uWsyIZO0"
+        }
+      },
       "package": "com.bemax159.ScooterGamingApp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9bbdb06a-b6f5-46d1-a729-e2cfe84bfd38"
+      }
     }
   }
 }

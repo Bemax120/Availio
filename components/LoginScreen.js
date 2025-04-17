@@ -11,17 +11,23 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { collection, doc, getDoc, query, where, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { SocialIcon } from "react-native-elements";
 import { auth, db } from "../firebase/firebaseConfig";
 
 const defaultProfileImage = require("../assets/download.png");
 
 const LoginScreen = ({ navigation }) => {
-  const [identifier, setIdentifier] = useState(""); 
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
 
   const fetchEmailFromUsername = async (username) => {
     try {
@@ -31,7 +37,7 @@ const LoginScreen = ({ navigation }) => {
       if (!querySnapshot.empty) {
         return querySnapshot.docs[0].data().email;
       }
-      return null; 
+      return null;
     } catch (error) {
       console.error("Error fetching email:", error);
       return null;
@@ -47,7 +53,6 @@ const LoginScreen = ({ navigation }) => {
     setLoading(true);
     let emailToUse = identifier;
 
-    
     if (!identifier.includes("@")) {
       const foundEmail = await fetchEmailFromUsername(identifier);
       if (!foundEmail) {
@@ -59,32 +64,31 @@ const LoginScreen = ({ navigation }) => {
     }
 
     try {
-      console.log("🔍 Logging in:", emailToUse);
-      const userCredential = await signInWithEmailAndPassword(auth, emailToUse, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        emailToUse,
+        password
+      );
       const user = userCredential.user;
 
-      
       const userDoc = await getDoc(doc(db, "users", user.uid));
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
 
-        
         if (!userData.emailVerified) {
           setLoading(false);
           Alert.alert("Error", "Please verify your email before logging in.");
           return;
         }
 
-        console.log("✅ Login Success:", userData);
-
-        
         const finalUserData = {
           ...userData,
-          profileImage: userData.profileImage || Image.resolveAssetSource(defaultProfileImage).uri,
+          profileImage:
+            userData.profileImage ||
+            Image.resolveAssetSource(defaultProfileImage).uri,
         };
 
-        
         await AsyncStorage.setItem("userData", JSON.stringify(finalUserData));
 
         Alert.alert("Success", `Welcome, ${finalUserData.firstName}!`);
@@ -92,28 +96,30 @@ const LoginScreen = ({ navigation }) => {
       } else {
         throw new Error("User data not found in Firestore");
       }
-
     } catch (error) {
       console.error("❌ Login Error:", error);
-      Alert.alert("Error", error.message || "Login failed. Please check your credentials.");
+      Alert.alert(
+        "Error",
+        error.message || "Login failed. Please check your credentials."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  
-
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Enter your email/username and password to continue</Text>
+      <Text style={styles.title}>
+        Enter your email/username and password to continue
+      </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email or Username"
-          autoCapitalize="none"
-          value={identifier}
-          onChangeText={setIdentifier}
-        />
+      <TextInput
+        style={styles.input}
+        placeholder="Email or Username"
+        autoCapitalize="none"
+        value={identifier}
+        onChangeText={setIdentifier}
+      />
 
       <TextInput
         style={styles.input}
@@ -132,7 +138,11 @@ const LoginScreen = ({ navigation }) => {
         onPress={handleLogin}
         disabled={loading}
       >
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Enter</Text>}
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Enter</Text>
+        )}
       </TouchableOpacity>
 
       <Text style={styles.orText}>or</Text>
@@ -142,11 +152,13 @@ const LoginScreen = ({ navigation }) => {
 
       <Text style={styles.registerText}>
         Don't have an account?{" "}
-        <Text style={styles.registerLink} onPress={() => navigation.navigate("Register")}>
+        <Text
+          style={styles.registerLink}
+          onPress={() => navigation.navigate("Register")}
+        >
           Register Here.
         </Text>
       </Text>
-    
     </View>
   );
 };

@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import RNPickerSelect from 'react-native-picker-select';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
+import RNPickerSelect from "react-native-picker-select";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 const EnhancedFilterScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
 
-  // Filter state variables
-  const [vehicleType, setVehicleType] = useState('all');
-  const [brand, setBrand] = useState('all');
-  const [cc, setCc] = useState('all');
-  const [priceRange, setPriceRange] = useState('all');
+  const locationAddress = route.params?.locationAddress || null;
+  const locationFilter = route.params?.locationFilter || null;
+  console.log(locationFilter, locationAddress);
+
+  const [vehicleType, setVehicleType] = useState("all");
+  const [brand, setBrand] = useState("all");
+  const [cc, setCc] = useState("all");
+  const [priceRange, setPriceRange] = useState("all");
 
   const applyFilters = () => {
-    // Build filters object to send to Dashboard
-    const filters = { vehicleType, brand, cc, priceRange };
-    // Navigate to the bottom-tab navigator (HomeTabs) and pass filters
+    const filters = { vehicleType, brand, cc, priceRange, locationFilter };
     navigation.replace("HomeTabs", { filters });
   };
 
@@ -24,19 +32,30 @@ const EnhancedFilterScreen = () => {
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>Filter Vehicles</Text>
       </View>
-      
+
       <View style={styles.container}>
         <Text style={styles.subHeader}>Customize your search</Text>
-        
+
+        <TouchableOpacity
+          style={styles.mapButton}
+          onPress={() => navigation.navigate("MapPinScreen")}
+        >
+          <Text style={styles.mapButtonText}>📍 Set Location Filter</Text>
+        </TouchableOpacity>
+
+        {locationAddress && (
+          <Text style={styles.selectedLocationText}>📍 {locationAddress}</Text>
+        )}
+
         <View style={styles.filterSection}>
           <Text style={styles.label}>Vehicle Type</Text>
           <RNPickerSelect
             onValueChange={(value) => setVehicleType(value)}
             value={vehicleType}
             items={[
-              { label: 'All Vehicles', value: 'all' },
-              { label: 'Scooters (2 Wheels)', value: 'scooters' },
-              { label: 'Cars (4 Wheels)', value: 'cars' },
+              { label: "All Vehicles", value: "all" },
+              { label: "Scooters (2 Wheels)", value: "scooters" },
+              { label: "Cars (4 Wheels)", value: "cars" },
             ]}
             style={pickerStyles}
             useNativeAndroidPickerStyle={false}
@@ -49,11 +68,11 @@ const EnhancedFilterScreen = () => {
             onValueChange={(value) => setBrand(value)}
             value={brand}
             items={[
-              { label: 'All Brands', value: 'all' },
-              { label: 'Honda', value: 'honda' },
-              { label: 'Yamaha', value: 'yamaha' },
-              { label: 'Suzuki', value: 'suzuki' },
-              { label: 'Kawasaki', value: 'kawasaki' },
+              { label: "All Brands", value: "all" },
+              { label: "Honda", value: "honda" },
+              { label: "Yamaha", value: "yamaha" },
+              { label: "Suzuki", value: "suzuki" },
+              { label: "Kawasaki", value: "kawasaki" },
             ]}
             style={pickerStyles}
             useNativeAndroidPickerStyle={false}
@@ -66,10 +85,10 @@ const EnhancedFilterScreen = () => {
             onValueChange={(value) => setCc(value)}
             value={cc}
             items={[
-              { label: 'All CC', value: 'all' },
-              { label: 'Below 125cc', value: 'below125' },
-              { label: '125cc - 150cc', value: '125to150' },
-              { label: 'Above 150cc', value: 'above150' },
+              { label: "All CC", value: "all" },
+              { label: "Below 125cc", value: "below125" },
+              { label: "125cc - 150cc", value: "125to150" },
+              { label: "Above 150cc", value: "above150" },
             ]}
             style={pickerStyles}
             useNativeAndroidPickerStyle={false}
@@ -82,10 +101,10 @@ const EnhancedFilterScreen = () => {
             onValueChange={(value) => setPriceRange(value)}
             value={priceRange}
             items={[
-              { label: 'All Prices', value: 'all' },
-              { label: 'Below ₱500', value: 'below500' },
-              { label: '₱500 - ₱700', value: '500to700' },
-              { label: 'Above ₱700', value: 'above700' },
+              { label: "All Prices", value: "all" },
+              { label: "Below ₱500", value: "below500" },
+              { label: "₱500 - ₱700", value: "500to700" },
+              { label: "Above ₱700", value: "above700" },
             ]}
             style={pickerStyles}
             useNativeAndroidPickerStyle={false}
@@ -105,28 +124,47 @@ export default EnhancedFilterScreen;
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: "#f8f8f8",
+  },
+  mapButton: {
+    backgroundColor: "#007AFF",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 20,
+    marginHorizontal: 20,
+  },
+  mapButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  selectedLocationText: {
+    textAlign: "center",
+    marginTop: 8,
+    fontSize: 14,
+    color: "#444",
   },
   headerContainer: {
-    width: '100%',
+    width: "100%",
     height: 100,
-    backgroundColor: 'red',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "red",
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerText: {
     fontSize: 32,
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     marginTop: -30,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
@@ -134,29 +172,29 @@ const styles = StyleSheet.create({
   },
   subHeader: {
     fontSize: 18,
-    color: '#333',
+    color: "#333",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   filterSection: {
     marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    color: '#555',
+    color: "#555",
     marginBottom: 8,
   },
   applyButton: {
-    backgroundColor: 'red',
+    backgroundColor: "red",
     paddingVertical: 15,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 30,
   },
   applyButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
@@ -166,21 +204,21 @@ const pickerStyles = {
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: 'red',
+    borderColor: "red",
     borderRadius: 8,
-    color: 'red',
+    color: "red",
     paddingRight: 30,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   inputAndroid: {
     fontSize: 16,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: 'red',
+    borderColor: "red",
     borderRadius: 8,
-    color: 'red',
+    color: "red",
     paddingRight: 30,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
-}; 
+};
