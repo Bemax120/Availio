@@ -82,7 +82,6 @@ export default function RatingScreen({ route, navigation }) {
     }
 
     setLoading(true);
-    console.log(vehicle.id);
     try {
       const bookingRef = doc(db, "bookings", bookingId);
       await updateDoc(bookingRef, {

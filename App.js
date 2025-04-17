@@ -21,6 +21,7 @@ import BookingDetailScreen from "./components/BookingDetailScreen";
 import ChatScreen from "./components/ChatScreen";
 import EnhancedFilterScreen from "./components/EnhancedFilterScreen";
 import RatingScreen from "./components/RatingScreen";
+import MapPinScreen from "./components/MapPinScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -64,6 +65,7 @@ const App = () => {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="MapPinScreen" component={MapPinScreen} />
         <Stack.Screen
           name="Filter"
           component={EnhancedFilterScreen}

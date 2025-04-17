@@ -1,8 +1,16 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Dimensions,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const MotorcycleDetailScreen = ({ route, navigation }) => {
   const { motorcycle } = route.params;
@@ -15,28 +23,32 @@ const MotorcycleDetailScreen = ({ route, navigation }) => {
           pagingEnabled
           showsHorizontalScrollIndicator={false}
         >
-          {motorcycle.images && motorcycle.images.map((imageUrl, index) => (
-            <Image
-              key={index}
-              source={{ uri: imageUrl }}
-              style={styles.image}
-              resizeMode="cover"
-            />
-          ))}
+          {motorcycle.images &&
+            motorcycle.images.map((imageUrl, index) => (
+              <Image
+                key={index}
+                source={{ uri: imageUrl }}
+                style={styles.image}
+                resizeMode="cover"
+              />
+            ))}
         </ScrollView>
       </View>
-
 
       <View style={styles.detailsContainer}>
         <Text style={styles.name}>{motorcycle.name}</Text>
         <Text style={styles.location}>
-          <Ionicons name="location-sharp" size={14} color="gray" /> {motorcycle.location}
+          <Ionicons name="location-sharp" size={14} color="gray" />{" "}
+          {motorcycle.location}
         </Text>
 
         <View style={styles.addOns}>
           <Text style={styles.addOnsTitle}>Add Ons:</Text>
           <View style={styles.addOnItem}>
-            <Image source={{ uri: 'path/to/extra-helmet-image' }} style={styles.addOnImage} />
+            <Image
+              source={{ uri: "path/to/extra-helmet-image" }}
+              style={styles.addOnImage}
+            />
             <Text style={styles.addOnText}>Extra Helmet</Text>
           </View>
         </View>
@@ -47,9 +59,11 @@ const MotorcycleDetailScreen = ({ route, navigation }) => {
 
         <TouchableOpacity
           style={styles.dateButton}
-          onPress={() => navigation.navigate('DateTimePicker', { motorcycle: motorcycle })}
+          onPress={() =>
+            navigation.navigate("DateTimePicker", { motorcycle: motorcycle })
+          }
         >
-          <Text style={styles.dateButtonText}>Set Date & Time</Text>
+          <Text style={styles.dateButtonText}>Book Now</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -59,14 +73,14 @@ const MotorcycleDetailScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   imageCarousel: {
     height: 250,
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
   },
   image: {
-    width: width, 
+    width: width,
     height: 265,
   },
   detailsContainer: {
@@ -74,12 +88,12 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   location: {
     fontSize: 16,
-    color: 'gray',
+    color: "gray",
     marginBottom: 20,
   },
   addOns: {
@@ -87,11 +101,11 @@ const styles = StyleSheet.create({
   },
   addOnsTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   addOnItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 10,
   },
   addOnImage: {
@@ -107,19 +121,19 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'red',
+    fontWeight: "bold",
+    color: "red",
   },
   dateButton: {
-    backgroundColor: 'red',
+    backgroundColor: "red",
     padding: 15,
     borderRadius: 5,
-    alignItems: 'center',
+    alignItems: "center",
   },
   dateButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
   },
 });
 
-export default MotorcycleDetailScreen; 
+export default MotorcycleDetailScreen;

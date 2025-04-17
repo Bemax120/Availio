@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   BackHandler,
+  Image,
 } from "react-native";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
@@ -69,7 +70,6 @@ export default function InquireScreen({ route, navigation }) {
   useEffect(() => {
     const calculateDuration = () => {
       if (!booking?.pickupDate || !booking?.returnDate) return;
-      console.log(booking);
       const pickup = booking?.pickupDate;
       const returnD = booking?.returnDate;
 
@@ -139,12 +139,14 @@ export default function InquireScreen({ route, navigation }) {
 
       <View style={styles.container}>
         <View style={styles.card}>
-          <Text style={styles.bookNumber}>Book ID: {booking.id}</Text>
+          <Image
+            style={styles.vehicleImage}
+            source={{ uri: motorcycle.image }}
+          />
           <Text style={styles.dateText}>{currentDate}</Text>
           <Text style={styles.itemTitle}>
             {motorcycleName || "No Motorcycle Name"}
           </Text>
-          <Text style={styles.itemSubtitle}>Scooter Gaming PH</Text>
           <Text style={styles.price}>₱{totalPrice}</Text>
 
           <View style={styles.statusContainer}>
@@ -176,10 +178,9 @@ export default function InquireScreen({ route, navigation }) {
           </View>
 
           <View style={styles.tenantInfoContainer}>
-            <Text style={styles.sectionTitle}>Supplier Information</Text>
-            <Text style={styles.tenantName}>John Doe</Text>
+            <Text style={styles.sectionTitle}>{motorcycle.businessName}</Text>
             <Text style={styles.tenantContact}>
-              scootergaming@gmail.com • 09667778888
+              {motorcycle.businessEmail} • {motorcycle.contactNumber}
             </Text>
           </View>
 
@@ -202,7 +203,7 @@ export default function InquireScreen({ route, navigation }) {
             <Text style={styles.value}>{rentalDuration}</Text>
           </View>
 
-          {bookingStatus !== "Cancelled" && (
+          {bookingStatus !== "Cancelled" && bookingStatus !== "Complete" ? (
             <TouchableOpacity
               style={styles.secondaryButton}
               onPress={async () => {
@@ -219,7 +220,7 @@ export default function InquireScreen({ route, navigation }) {
             >
               <Text style={styles.secondaryButtonText}>Cancel Booking</Text>
             </TouchableOpacity>
-          )}
+          ) : null}
 
           {bookingStatus !== "Cancelled" && (
             <TouchableOpacity
@@ -256,6 +257,11 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "red",
+  },
+  vehicleImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: 10,
   },
   header: {
     backgroundColor: "red",
@@ -331,7 +337,6 @@ const styles = StyleSheet.create({
   tenantContact: {
     fontSize: 14,
     color: "#666",
-    marginTop: 4,
   },
   infoRow: {
     marginBottom: 12,
