@@ -39,7 +39,7 @@ const MotorcycleDetailScreen = ({ route, navigation }) => {
         <Text style={styles.name}>{motorcycle.name}</Text>
         <Text style={styles.location}>
           <Ionicons name="location-sharp" size={14} color="gray" />{" "}
-          {motorcycle.location}
+          {motorcycle.businessAddress}
         </Text>
 
         <View style={styles.addOns}>

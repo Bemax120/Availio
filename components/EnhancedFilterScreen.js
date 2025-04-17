@@ -15,15 +15,22 @@ const EnhancedFilterScreen = () => {
 
   const locationAddress = route.params?.locationAddress || null;
   const locationFilter = route.params?.locationFilter || null;
-  console.log(locationFilter, locationAddress);
 
   const [vehicleType, setVehicleType] = useState("all");
   const [brand, setBrand] = useState("all");
   const [cc, setCc] = useState("all");
   const [priceRange, setPriceRange] = useState("all");
+  const [sortOrder, setSortOrder] = useState("none");
 
   const applyFilters = () => {
-    const filters = { vehicleType, brand, cc, priceRange, locationFilter };
+    const filters = {
+      vehicleType,
+      brand,
+      cc,
+      priceRange,
+      locationFilter,
+      sortOrder,
+    };
     navigation.replace("HomeTabs", { filters });
   };
 
@@ -105,6 +112,21 @@ const EnhancedFilterScreen = () => {
               { label: "Below ₱500", value: "below500" },
               { label: "₱500 - ₱700", value: "500to700" },
               { label: "Above ₱700", value: "above700" },
+            ]}
+            style={pickerStyles}
+            useNativeAndroidPickerStyle={false}
+          />
+        </View>
+
+        <View style={styles.filterSection}>
+          <Text style={styles.label}>Sort by Distance</Text>
+          <RNPickerSelect
+            onValueChange={(value) => setSortOrder(value)}
+            value={sortOrder}
+            items={[
+              { label: "No Sorting", value: "none" },
+              { label: "Nearest First", value: "nearest" },
+              { label: "Farthest First", value: "farthest" },
             ]}
             style={pickerStyles}
             useNativeAndroidPickerStyle={false}
