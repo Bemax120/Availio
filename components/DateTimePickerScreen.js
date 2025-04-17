@@ -117,6 +117,7 @@ export default function DateTimePickerScreen({ route, navigation }) {
         totalPrice,
         vehicleId: motorcycle.id,
         bookingStatus: "Pending",
+        rated: false,
       };
 
       setLoading(true);

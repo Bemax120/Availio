@@ -10,7 +10,7 @@ import {
   ScrollView,
   Image,
 } from "react-native";
-import { doc, getDoc, collection, addDoc } from "firebase/firestore";
+import { doc, getDoc, collection, addDoc, updateDoc } from "firebase/firestore";
 import { FontAwesome } from "@expo/vector-icons";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
@@ -84,6 +84,10 @@ export default function RatingScreen({ route, navigation }) {
     setLoading(true);
     console.log(vehicle.id);
     try {
+      const bookingRef = doc(db, "bookings", bookingId);
+      await updateDoc(bookingRef, {
+        rated: true,
+      });
       // Save vehicle rating
       const vehicleRatingRef = collection(
         db,

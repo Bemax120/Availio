@@ -51,6 +51,7 @@ const MotorcycleBookScreen = () => {
           date: formatDateTime(bookingData.createdAt),
           status: bookingData.bookingStatus,
           total: bookingData.totalPrice,
+          rated: bookingData.rated,
         };
       });
 
@@ -206,7 +207,7 @@ const MotorcycleBookScreen = () => {
                   <Text style={styles.secondaryButtonText}>View Details</Text>
                 </TouchableOpacity>
 
-                {item.status === "Complete" ? (
+                {item.status === "Complete" && !item.rated ? (
                   <TouchableOpacity
                     style={styles.primaryButton}
                     onPress={() => {

@@ -39,34 +39,60 @@ const DashboardScreen = () => {
         const scooterId = scooterDoc.id;
 
         let supplierData = null;
-        let averageRating = null;
+        let supplierAverageRating = null;
+        let supplierRatingCount = null;
+
+        let vehicleAverageRating = null;
+        let vehicleRatingCount = null;
 
         try {
+          // Fetch supplier
           const supplierRef = doc(db, "users", scooterData.ownerId);
           const supplierSnap = await getDoc(supplierRef);
 
           if (supplierSnap.exists()) {
             supplierData = supplierSnap.data();
 
-            // Fetch ratings from subcollection
-            const ratingsRef = collection(
+            // Fetch supplier ratings
+            const supplierRatingsRef = collection(
               db,
               "users",
               scooterData.ownerId,
               "supplierRatings"
             );
-            const ratingsSnap = await getDocs(ratingsRef);
+            const supplierRatingsSnap = await getDocs(supplierRatingsRef);
 
-            const ratings = ratingsSnap.docs
+            const supplierRatings = supplierRatingsSnap.docs
               .map((doc) => doc.data().rating)
               .filter(Boolean);
-            if (ratings.length > 0) {
-              const total = ratings.reduce((sum, val) => sum + val, 0);
-              averageRating = total / ratings.length;
+
+            if (supplierRatings.length > 0) {
+              const total = supplierRatings.reduce((sum, val) => sum + val, 0);
+              supplierAverageRating = total / supplierRatings.length;
+              supplierRatingCount = supplierRatings.length;
             }
           }
+
+          // Fetch vehicle ratings
+          const vehicleRatingsRef = collection(
+            db,
+            "vehicles",
+            scooterId,
+            "ratings"
+          );
+          const vehicleRatingsSnap = await getDocs(vehicleRatingsRef);
+
+          const vehicleRatings = vehicleRatingsSnap.docs
+            .map((doc) => doc.data().rating)
+            .filter(Boolean);
+
+          if (vehicleRatings.length > 0) {
+            const total = vehicleRatings.reduce((sum, val) => sum + val, 0);
+            vehicleAverageRating = total / vehicleRatings.length;
+            vehicleRatingCount = vehicleRatings.length;
+          }
         } catch (err) {
-          console.warn("Error fetching supplier or rating:", err);
+          console.warn("Error fetching supplier or ratings:", err);
         }
 
         return {
@@ -75,7 +101,10 @@ const DashboardScreen = () => {
           businessProfile: supplierData?.businessProfile || null,
           businessVerified: supplierData?.businessVerified || false,
           businessName: supplierData?.businessName || "Unknown",
-          supplierRating: averageRating,
+          supplierRating: supplierAverageRating || 0,
+          supplierRatingCount: supplierRatingCount || 0,
+          vehicleRating: vehicleAverageRating || 0,
+          vehicleRatingCount: vehicleRatingCount || 0,
         };
       });
 
@@ -178,6 +207,15 @@ const DashboardScreen = () => {
     return <View style={{ flexDirection: "row", marginTop: 2 }}>{stars}</View>;
   };
 
+  const RatingStatus = (rating) => {
+    if (rating >= 4.5) return "Excellent";
+    if (rating >= 4) return "Very Good";
+    if (rating >= 3) return "Good";
+    if (rating >= 2) return "Bad";
+    if (rating >= 1) return "Very Bad";
+    return "No Rating";
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -250,7 +288,7 @@ const DashboardScreen = () => {
 
               <Text style={styles.scooterName}>{scooter.name}</Text>
               <View style={styles.starLocation}>
-                {renderStars(scooter.userRating ?? 0)}
+                {renderStars(scooter.vehicleRating ?? 0)}
                 <Icon name="location-pin" size={16} color="#4a5565" />
                 <Text style={styles.locationText}>{scooter.location}</Text>
               </View>
@@ -269,12 +307,16 @@ const DashboardScreen = () => {
               </View>
 
               <View style={styles.businessRating}>
-                <Text style={styles.businessText}>
-                  {scooter.supplierRating}
+                <Text style={styles.textRating}>{scooter.supplierRating}</Text>
+                <Text style={styles.textRating}>
+                  {RatingStatus(scooter.supplierRating)}
                 </Text>
                 <Icon name="star" size={16} color="#FFD700" />
                 <Text style={styles.businessText}>Supplier Rating</Text>
               </View>
+              <Text style={styles.businessText}>
+                {scooter.supplierRatingCount} Supplier User Ratings
+              </Text>
             </TouchableOpacity>
           ))
         ) : (
@@ -297,11 +339,17 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
 
+  textRating: {
+    color: "#0047AB",
+    fontWeight: "bold",
+  },
+
   businessRating: {
     flexDirection: "row",
     alignItems: "center",
     color: "#4a5565",
     marginTop: 5,
+    gap: 2,
   },
 
   businessDetail: {
