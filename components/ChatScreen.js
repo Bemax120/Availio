@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,27 +7,27 @@ import {
   TextInput,
   FlatList,
   StyleSheet,
-} from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+} from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 export default function ChatScreen({ route, navigation }) {
   const {
-    bookingNumber = 'SMJ00233',
-    bookingDate = 'Wed, 23 July 2022',
-    itemName = 'Honda Beat Playful',
-    vendorName = 'Scooter Gaming PH',
+    bookingNumber = "SMJ00233",
+    bookingDate = "Wed, 23 July 2022",
+    itemName = "Honda Beat Playful",
+    vendorName = "Scooter Gaming PH",
     price = 2000,
   } = route.params || {};
 
   const [messages, setMessages] = useState([
     {
-      id: '1',
-      text: 'Good morning sir, I want to confirm my order for Wednesday 23 June, is it available sir?',
+      id: "1",
+      text: "Good morning sir, I want to confirm my order for Wednesday 23 June, is it available sir?",
       isUser: true,
     },
   ]);
 
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
 
   const handleSend = () => {
     if (!inputText.trim()) return;
@@ -37,7 +37,7 @@ export default function ChatScreen({ route, navigation }) {
       isUser: true,
     };
     setMessages((prev) => [...prev, newMessage]);
-    setInputText('');
+    setInputText("");
   };
 
   const renderMessage = ({ item }) => {
@@ -59,7 +59,10 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
@@ -81,8 +84,11 @@ export default function ChatScreen({ route, navigation }) {
           <TouchableOpacity
             style={styles.viewDetailsButton}
             onPress={() => {
-              // Example navigation to BookingDetail
-              navigation.navigate('BookingDetail', { bookingNumber });
+              navigation.navigate("Inquire", {
+                bookingId: item.id,
+                totalPrice: item.total,
+                motorcycle: item,
+              });
             }}
           >
             <Text style={styles.viewDetailsText}>View Booked Details</Text>
@@ -116,12 +122,12 @@ export default function ChatScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: 'red',
+    backgroundColor: "red",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'red',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "red",
     paddingHorizontal: 10,
     paddingVertical: 12,
   },
@@ -132,66 +138,66 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   onlineText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 12,
   },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   bookingCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 16,
     margin: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    shadowColor: '#000',
+    borderColor: "#ddd",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
   bookingCardTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   bookNo: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   bookDate: {
     fontSize: 14,
-    color: '#555',
+    color: "#555",
   },
   itemName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 2,
   },
   vendorName: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 4,
   },
   price: {
     fontSize: 16,
-    color: 'red',
-    fontWeight: 'bold',
+    color: "red",
+    fontWeight: "bold",
   },
   viewDetailsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 6,
   },
   viewDetailsText: {
-    color: 'red',
+    color: "red",
     fontSize: 14,
     marginRight: 4,
   },
@@ -201,50 +207,50 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   messageRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     marginBottom: 10,
   },
   userMessageRow: {},
   messageBubble: {
-    maxWidth: '70%',
-    backgroundColor: '#DCF8C6',
+    maxWidth: "70%",
+    backgroundColor: "#DCF8C6",
     padding: 10,
     borderRadius: 8,
   },
   userBubble: {},
   messageText: {
     fontSize: 14,
-    color: '#000',
+    color: "#000",
   },
   avatarIcon: {
     marginLeft: 6,
   },
   inputContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    backgroundColor: '#f2f2f2',
+    flexDirection: "row",
+    backgroundColor: "#f2f2f2",
     padding: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   textInput: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
     paddingHorizontal: 12,
     fontSize: 14,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   sendButton: {
-    backgroundColor: 'green',
+    backgroundColor: "green",
     padding: 10,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-}); 
+});

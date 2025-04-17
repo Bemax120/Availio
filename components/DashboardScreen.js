@@ -14,6 +14,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 const DashboardScreen = () => {
   const [searchText, setSearchText] = useState("");
@@ -97,6 +98,38 @@ const DashboardScreen = () => {
     setScooters(filteredScooters);
   }, [searchText, allScooters]);
 
+  const renderStars = (rating) => {
+    const stars = [];
+
+    const filled = Math.floor(rating);
+    const hasHalf = rating - filled >= 0.5;
+
+    for (let i = 0; i < filled; i++) {
+      stars.push(
+        <Icon key={`full-${i}`} name="star" size={16} color="#FFD700" />
+      );
+    }
+
+    if (hasHalf) {
+      stars.push(
+        <Icon key="half" name="star-half" size={16} color="#FFD700" />
+      );
+    }
+
+    while (stars.length < 5) {
+      stars.push(
+        <Icon
+          key={`empty-${stars.length}`}
+          name="star-border"
+          size={16}
+          color="#FFD700"
+        />
+      );
+    }
+
+    return <View style={{ flexDirection: "row", marginTop: 2 }}>{stars}</View>;
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -168,6 +201,16 @@ const DashboardScreen = () => {
               </View>
 
               <Text style={styles.scooterName}>{scooter.name}</Text>
+              <View style={styles.starLocation}>
+                {renderStars(scooter.userRating ?? 0)}
+                <Icon name="location-pin" size={16} color="#4a5565" />
+                <Text style={styles.locationText}>{scooter.location}</Text>
+              </View>
+              {scooter.userRating ? (
+                <Text></Text>
+              ) : (
+                <Text style={styles.userRatingText}>No User Ratings</Text>
+              )}
             </TouchableOpacity>
           ))
         ) : (
@@ -182,6 +225,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+
+  starLocation: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+
+  locationText: {
+    color: "#4a5565",
+    fontSize: 12,
+  },
+
+  userRatingText: {
+    color: "#305CDE",
   },
 
   searchContainer: {
@@ -268,8 +326,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     backgroundColor: "#FFFFFF",
     padding: 10,
-    width: "32%",
-    height: "20%",
     borderRadius: 5,
     zIndex: 10,
     color: "red",
