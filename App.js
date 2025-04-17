@@ -26,7 +26,9 @@ import MapPinScreen from "./components/MapPinScreen";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function HomeTabs() {
+function HomeTabs({ route }) {
+  const filters = route?.params?.filters || null;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -47,7 +49,11 @@ function HomeTabs() {
         tabBarInactiveTintColor: "gray",
       })}
     >
-      <Tab.Screen name="Home" component={DashboardScreen} />
+      <Tab.Screen
+        name="Home"
+        initialParams={{ filters }}
+        component={DashboardScreen}
+      />
       <Tab.Screen name="Favorite" component={MotorcycleFavoritesScreen} />
       <Tab.Screen name="Book" component={MotorcycleBookScreen} />
       <Tab.Screen name="Account" component={ProfilePage} />

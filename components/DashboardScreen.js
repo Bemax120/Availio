@@ -22,7 +22,27 @@ import {
 import { db } from "../firebase/firebaseConfig";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
-const DashboardScreen = () => {
+const calculateDistance = (loc1, loc2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const R = 6371; // Earth's radius in km
+
+  const dLat = toRad(loc2.latitude - loc1.latitude);
+  const dLon = toRad(loc2.longitude - loc1.longitude);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(loc1.latitude)) *
+      Math.cos(toRad(loc2.latitude)) *
+      Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
+
+const DashboardScreen = ({ route }) => {
+  const filters = route?.params?.filters || {};
+  const locationFilter = filters.locationFilter;
+
   const [searchText, setSearchText] = useState("");
   const [scooters, setScooters] = useState([]);
   const [allScooters, setAllScooters] = useState([]);
@@ -95,22 +115,42 @@ const DashboardScreen = () => {
           console.warn("Error fetching supplier or ratings:", err);
         }
 
+        let distance = null;
+        if (locationFilter && supplierData.businessCoordinates) {
+          distance = calculateDistance(
+            locationFilter,
+            supplierData.businessCoordinates
+          );
+        }
+
         return {
           id: scooterId,
           ...scooterData,
           businessProfile: supplierData?.businessProfile || null,
           businessVerified: supplierData?.businessVerified || false,
           businessName: supplierData?.businessName || "Unknown",
+          businessAddress: supplierData?.businessAddress || null,
           supplierRating: supplierAverageRating || 0,
           supplierRatingCount: supplierRatingCount || 0,
           vehicleRating: vehicleAverageRating || 0,
           vehicleRatingCount: vehicleRatingCount || 0,
+          distance: distance ?? null,
         };
       });
 
       const scootersList = await Promise.all(scooterPromises);
-      setScooters(scootersList);
-      setAllScooters(scootersList);
+
+      let sortedList = [...scootersList];
+      if (filters.sortOrder === "nearest") {
+        sortedList.sort(
+          (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity)
+        );
+      } else if (filters.sortOrder === "farthest") {
+        sortedList.sort((a, b) => (b.distance ?? 0) - (a.distance ?? 0));
+      }
+
+      setScooters(sortedList);
+      setAllScooters(sortedList);
     });
 
     return unsubscribe;
@@ -255,9 +295,26 @@ const DashboardScreen = () => {
 
       <View style={styles.unitsContainer}>
         <Text style={styles.unitsTitle}>Available Units</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAllText}>See All</Text>
-        </TouchableOpacity>
+        {filters.sortOrder !== "none" && (
+          <View>
+            <Text
+              style={{
+                marginBottom: 10,
+                color: "#000000",
+                justifyContent: "center",
+                alignContent: "center",
+                marginTop: 8,
+                width: "25%",
+                paddingVertical: 8,
+                paddingHorizontal: 10,
+                borderRadius: 5,
+                backgroundColor: "#D4D4D4",
+              }}
+            >
+              {filters.sortOrder === "nearest" ? "Nearest" : "Farthest"}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.scooterList}>
@@ -290,9 +347,18 @@ const DashboardScreen = () => {
               <View style={styles.starLocation}>
                 {renderStars(scooter.vehicleRating ?? 0)}
                 <Icon name="location-pin" size={16} color="#4a5565" />
-                <Text style={styles.locationText}>{scooter.location}</Text>
               </View>
-
+              <Text style={styles.locationText}>{scooter.businessAddress}</Text>
+              {scooter.distance !== null && (
+                <Text
+                  style={[
+                    styles.locationText,
+                    { fontStyle: "italic", color: "#4a5565" },
+                  ]}
+                >
+                  📍 {scooter.distance.toFixed(2)} km Away From You
+                </Text>
+              )}
               <View style={styles.businessDetail}>
                 <Image
                   source={{ uri: scooter?.businessProfile }}
@@ -421,8 +487,7 @@ const styles = StyleSheet.create({
   },
 
   unitsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: "col",
     padding: 15,
   },
 
@@ -480,6 +545,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 10,
     marginRight: 10,
+    marginBottom: 10,
   },
 
   scooterName: {
