@@ -1,16 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, FlatList, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { collection, doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase/firebaseConfig';
-import { getAuth } from 'firebase/auth';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  FlatList,
+  ScrollView,
+  Image,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase/firebaseConfig";
+import { getAuth } from "firebase/auth";
+import { useNavigation } from "@react-navigation/native";
 
 const MotorcycleBookScreen = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('Upcoming');
-  const navigation = useNavigation(); 
+  const [filter, setFilter] = useState("Pending");
+  const navigation = useNavigation();
 
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
@@ -18,24 +27,26 @@ const MotorcycleBookScreen = () => {
   useEffect(() => {
     if (!userId) return;
 
-    setLoading(true); 
-    const myBookingRef = collection(db, 'users', userId, 'myBooking');
+    setLoading(true);
+    const myBookingRef = collection(db, "users", userId, "myBooking");
 
     const unsubscribe = onSnapshot(myBookingRef, async (snapshot) => {
       const bookingPromises = snapshot.docs.map(async (docSnap) => {
         const bookingId = docSnap.id;
-        const bookingRef = doc(db, 'bookings', bookingId);
+        const bookingRef = doc(db, "bookings", bookingId);
         const bookingSnap = await getDoc(bookingRef);
 
         if (!bookingSnap.exists()) return null;
 
         const bookingData = bookingSnap.data();
-        const vehicleRef = doc(db, 'vehicles', bookingData.vehicleId);
+        const vehicleRef = doc(db, "vehicles", bookingData.vehicleId);
         const vehicleSnap = await getDoc(vehicleRef);
 
         return {
           id: bookingId,
-          bike: vehicleSnap.exists() ? vehicleSnap.data().name : 'Unknown Vehicle',
+          bike: vehicleSnap.exists()
+            ? vehicleSnap.data().name
+            : "Unknown Vehicle",
           image: vehicleSnap.exists() ? vehicleSnap.data().defaultImg : null,
           date: formatDateTime(bookingData.createdAt),
           status: bookingData.bookingStatus,
@@ -43,7 +54,9 @@ const MotorcycleBookScreen = () => {
         };
       });
 
-      const resolvedBookings = (await Promise.all(bookingPromises)).filter(Boolean);
+      const resolvedBookings = (await Promise.all(bookingPromises)).filter(
+        Boolean
+      );
       setBookings(resolvedBookings);
       setLoading(false);
     });
@@ -51,39 +64,55 @@ const MotorcycleBookScreen = () => {
     return () => unsubscribe();
   }, [userId, filter]);
 
-  const formatDateTime = (timestamp) => {
-    if (!timestamp) return 'Unknown Date';
-    const dateObj = new Date(timestamp);
-    
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
+  const formatDateTime = (value) => {
+    if (!value) return "Invalid date";
 
-    let hours = dateObj.getHours();
-    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? ' PM' : ' AM';
-    hours = hours % 12 || 12;
+    if (value.toDate) {
+      value = value.toDate();
+    } else {
+      value = new Date(value);
+    }
 
-    return `${year}-${month}-${day} / ${hours}:${minutes}${ampm}`;
+    if (isNaN(value)) return "Invalid date";
+
+    return value.toLocaleString("en-US", {
+      weekday: "short",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   };
 
-
   const filteredBookings = bookings.filter((booking) => {
-    const isUpcoming = booking.status === 'Confirmed' || booking.status === 'Pending';
-    return filter === 'Upcoming' ? isUpcoming : !isUpcoming;
+    switch (filter) {
+      case "Pending":
+        return booking.status === "Confirmed" || booking.status === "Pending";
+      case "Complete":
+        return booking.status === "Complete";
+      case "On-Going":
+        return booking.status === "On-Going";
+      case "Cancelled":
+        return booking.status === "Cancelled";
+      default:
+        return true;
+    }
   });
 
   const StatusBadge = ({ status }) => {
     let backgroundColor;
-  
-    if (status === 'Complete') {
-      backgroundColor = '#4CD964'; 
-    } else if (status === 'Cancel') {
-      backgroundColor = '#FF3B30'; 
+
+    if (status === "Complete") {
+      backgroundColor = "#4CD964";
+    } else if (status === "Cancelled") {
+      backgroundColor = "#FF3B30";
+    } else if (status === "On-Going") {
+      backgroundColor = "#FFA500";
     } else {
-      backgroundColor = '#FFCC00'; 
+      backgroundColor = "#FFCC00";
     }
-  
+
     return (
       <View style={[styles.statusBadge, { backgroundColor }]}>
         <Text style={styles.statusText}>{status}</Text>
@@ -91,32 +120,41 @@ const MotorcycleBookScreen = () => {
     );
   };
 
- 
   return (
     <View style={styles.container}>
       <Text style={styles.screenTitle}>My Bookings</Text>
 
-      <View style={styles.segmentContainer}>
-        <TouchableOpacity
-          style={[styles.segmentButton, filter === 'Upcoming' && styles.activeSegment]}
-          onPress={() => {
-            setLoading(true);
-            setFilter('Upcoming');
-          }}
-        >
-          <Text style={filter === 'Upcoming' ? styles.activeSegmentText : styles.segmentText}>Pending</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.segmentButton, filter === 'Past' && styles.activeSegment]}
-          onPress={() => {
-            setLoading(true);
-            setFilter('Past');
-          }}
-        >
-          <Text style={filter === 'Past' ? styles.activeSegmentText : styles.segmentText}>Completed</Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.segmentScroll}
+      >
+        <View style={styles.segmentContainer}>
+          {["Pending", "Complete", "On-Going", "Cancelled"].map((item) => (
+            <TouchableOpacity
+              key={item}
+              style={[
+                styles.segmentButton,
+                filter === item && styles.activeSegment,
+              ]}
+              onPress={() => {
+                setLoading(true);
+                setFilter(item);
+              }}
+            >
+              <Text
+                style={
+                  filter === item
+                    ? styles.activeSegmentText
+                    : styles.segmentText
+                }
+              >
+                {item === "Upcoming" ? "Pending" : item}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
 
       {loading ? (
         <View style={styles.loaderContainer}>
@@ -129,7 +167,6 @@ const MotorcycleBookScreen = () => {
           contentContainerStyle={styles.scrollContainer}
           renderItem={({ item }) => (
             <View style={styles.bookingCard}>
-              
               <View style={styles.bookingHeader}>
                 <View style={styles.bikeInfo}>
                   <Ionicons name="calendar" size={20} color="#4b6584" />
@@ -140,7 +177,10 @@ const MotorcycleBookScreen = () => {
 
               <View style={styles.bookingContent}>
                 {item.image ? (
-                  <Image source={{ uri: item.image }} style={styles.bookingImage} />
+                  <Image
+                    source={{ uri: item.image }}
+                    style={styles.bookingImage}
+                  />
                 ) : (
                   <View style={styles.imagePlaceholder}>
                     <Text style={styles.placeholderText}>No Image</Text>
@@ -153,19 +193,29 @@ const MotorcycleBookScreen = () => {
               </View>
 
               <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => {
-                  navigation.navigate('Inquire', { bookingId: item.id, totalPrice: item.total, motorcycle: item });
-                }}
-              >
-                <Text style={styles.secondaryButtonText}>View Details</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={() => {
+                    navigation.navigate("Inquire", {
+                      bookingId: item.id,
+                      totalPrice: item.total,
+                      motorcycle: item,
+                    });
+                  }}
+                >
+                  <Text style={styles.secondaryButtonText}>View Details</Text>
+                </TouchableOpacity>
 
-                <TouchableOpacity style={styles.primaryButton}
-                onPress={() => {
-                  navigation.navigate('Inquire', { bookingId: item.id, totalPrice: item.total, motorcycle: item });
-                }}>
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={() => {
+                    navigation.navigate("Inquire", {
+                      bookingId: item.id,
+                      totalPrice: item.total,
+                      motorcycle: item,
+                    });
+                  }}
+                >
                   <Text style={styles.primaryButtonText}>Modify</Text>
                 </TouchableOpacity>
               </View>
@@ -178,33 +228,105 @@ const MotorcycleBookScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  screenTitle: { fontSize: 28, fontWeight: '800', color: '#333', padding: 20, backgroundColor: 'white' },
-  segmentContainer: { flexDirection: 'row', padding: 15, backgroundColor: 'white' },
-  segmentButton: { flex: 1, padding: 12, alignItems: 'center', borderRadius: 8, marginHorizontal: 5 },
-  activeSegment: { backgroundColor: '#FF3B30' },
-  segmentText: { color: '#666', fontWeight: '600' },
-  activeSegmentText: { color: 'white', fontWeight: '600' },
+  container: { backgroundColor: "#F5F5F5" },
+  screenTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#333",
+    padding: 20,
+    backgroundColor: "white",
+  },
+  segmentScroll: {
+    marginVertical: 10,
+  },
+
+  segmentContainer: {
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 10,
+    height: 40,
+  },
+
+  segmentButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#eee",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    height: 38,
+  },
+
+  activeSegment: {
+    backgroundColor: "#EF0000",
+  },
+
+  segmentText: {
+    color: "#333",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+
+  activeSegmentText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
   scrollContainer: { padding: 15 },
-  bookingCard: { backgroundColor: 'white', borderRadius: 15, marginBottom: 15, padding: 15, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-  bookingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-  bikeInfo: { flexDirection: 'row', alignItems: 'center' },
-  bookingDate: { marginLeft: 8, color: 'black', fontWeight: '600' },
+  bookingCard: {
+    backgroundColor: "white",
+    borderRadius: 15,
+    marginBottom: 15,
+    padding: 15,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bookingHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  bikeInfo: { flexDirection: "row", alignItems: "center" },
+  bookingDate: { marginLeft: 8, color: "black", fontWeight: "600" },
   statusBadge: { paddingVertical: 4, paddingHorizontal: 12, borderRadius: 15 },
-  statusText: { color: 'white', fontWeight: '600', fontSize: 12 },
-  bookingContent: { flexDirection: 'row', marginBottom: 15 },
+  statusText: { color: "white", fontWeight: "600", fontSize: 12 },
+  bookingContent: { flexDirection: "row", marginBottom: 15 },
   bookingImage: { width: 100, height: 80, borderRadius: 10 },
-  imagePlaceholder: { width: 100, height: 80, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center', borderRadius: 10 },
-  placeholderText: { color: 'white', fontSize: 12 },
-  bookingDetails: { flex: 1, marginLeft: 15, justifyContent: 'space-between' },
-  bikeName: { fontSize: 18, fontWeight: '700', color: '#333' },
-  totalText: { fontSize: 16, color: '#4CD964', fontWeight: '600' },
-  actionButtons: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
-  primaryButton: { backgroundColor: '#FF3B30', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8, marginLeft: 10 },
-  primaryButtonText: { color: 'white', fontWeight: '600' },
-  secondaryButton: { borderWidth: 1, borderColor: 'black', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8 },
-  secondaryButtonText: { color: '#4b6584', fontWeight: '600' },
-  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  imagePlaceholder: {
+    width: 100,
+    height: 80,
+    backgroundColor: "black",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+  },
+  placeholderText: { color: "white", fontSize: 12 },
+  bookingDetails: { flex: 1, marginLeft: 15, justifyContent: "space-between" },
+  bikeName: { fontSize: 18, fontWeight: "700", color: "#333" },
+  totalText: { fontSize: 16, color: "#4CD964", fontWeight: "600" },
+  actionButtons: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 10,
+  },
+  primaryButton: {
+    backgroundColor: "#FF3B30",
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginLeft: 10,
+  },
+  primaryButtonText: { color: "white", fontWeight: "600" },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: "black",
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  secondaryButtonText: { color: "#4b6584", fontWeight: "600" },
+  loaderContainer: { justifyContent: "center", alignItems: "center" },
 });
 
 export default MotorcycleBookScreen;
