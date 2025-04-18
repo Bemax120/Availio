@@ -260,150 +260,166 @@ const DashboardScreen = ({ route }) => {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search Scooter"
-          value={searchText}
-          onChangeText={setSearchText}
-          onSubmitEditing={handleSearch}
-        />
-        <TouchableOpacity onPress={handleSearch} style={styles.searchIcon}>
-          <Ionicons name="search" size={24} color="gray" />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.bannerContainer}
+    <View style={{ flex: 1 }}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("MapPinScreen")}
+        style={styles.mapIcon}
       >
-        <View style={styles.banner}>
-          <Text style={styles.bannerText}>
-            Enjoy Scooter Gaming Services and pay easily
-          </Text>
+        <Ionicons name="map" size={40} color="red" />
+      </TouchableOpacity>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search Scooter"
+            value={searchText}
+            onChangeText={setSearchText}
+            onSubmitEditing={handleSearch}
+          />
+          <TouchableOpacity onPress={handleSearch} style={styles.searchIcon}>
+            <Ionicons name="search" size={24} color="gray" />
+          </TouchableOpacity>
         </View>
-        <View style={styles.banner}>
-          <Text style={styles.bannerText}>
-            Enjoy Scooter Gaming Services and pay easily
-          </Text>
-        </View>
-      </ScrollView>
 
-      <View style={styles.unitsContainer}>
-        <Text style={styles.unitsTitle}>Available Units</Text>
-        {filters.sortOrder !== "none" && (
-          <View>
-            <Text
-              style={{
-                marginBottom: 10,
-                color: "#000000",
-                justifyContent: "center",
-                alignContent: "center",
-                marginTop: 8,
-                width: "25%",
-                paddingVertical: 8,
-                paddingHorizontal: 10,
-                borderRadius: 5,
-                backgroundColor: "#D4D4D4",
-              }}
-            >
-              {filters.sortOrder === "nearest" ? "Nearest" : "Farthest"}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.bannerContainer}
+        >
+          <View style={styles.banner}>
+            <Text style={styles.bannerText}>
+              Enjoy Scooter Gaming Services and pay easily
             </Text>
           </View>
-        )}
-      </View>
-
-      <View style={styles.scooterList}>
-        {isLoading ? (
-          <View
-            style={{
-              width: "100%",
-              justifyContent: "center",
-              alignItems: "center",
-              paddingVertical: 50,
-            }}
-          >
-            <ActivityIndicator size="large" color="#4a5565" />
+          <View style={styles.banner}>
+            <Text style={styles.bannerText}>
+              Enjoy Scooter Gaming Services and pay easily
+            </Text>
           </View>
-        ) : scooters.length > 0 ? (
-          scooters.map((scooter) => (
-            <TouchableOpacity
-              key={scooter.id}
-              style={styles.scooterCard}
-              onPress={() =>
-                navigation.navigate("MotorcycleDetail", { motorcycle: scooter })
-              }
-            >
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {scooter.images.map((imgUrl, index) => (
-                  <Image
-                    key={index}
-                    source={{ uri: imgUrl }}
-                    style={styles.scooterImage}
-                  />
-                ))}
-              </ScrollView>
+        </ScrollView>
 
-              <View style={styles.floatingBox}>
-                <Text style={styles.floatingText}>
-                  ₱{scooter.pricePerDay}/day
-                </Text>
-              </View>
-
-              <Text style={styles.scooterName}>{scooter.name}</Text>
-              <View style={styles.starLocation}>
-                {renderStars(scooter.vehicleRating ?? 0)}
-                <Icon name="location-pin" size={16} color="#4a5565" />
-              </View>
-              <Text style={styles.locationText}>{scooter.businessAddress}</Text>
-              {scooter.distance !== null && (
-                <Text
-                  style={[
-                    styles.locationText,
-                    { fontStyle: "italic", color: "#4a5565" },
-                  ]}
-                >
-                  📍 {scooter.distance.toFixed(2)} km Away From You
-                </Text>
-              )}
-              <View style={styles.businessDetail}>
-                <Image
-                  source={{ uri: scooter?.businessProfile }}
-                  style={styles.smallIcon}
-                />
-                <Text style={styles.businessText}>{scooter.businessName}</Text>
-                {scooter.businessVerified ? (
-                  <Icon name="verified" size={16} color="#4a5565" />
-                ) : (
-                  <Icon name="help" size={16} color="#4a5565" />
-                )}
-              </View>
-
-              <View style={styles.businessRating}>
-                <Text style={styles.textRating}>{scooter.supplierRating}</Text>
-                <Text style={styles.textRating}>
-                  {RatingStatus(scooter.supplierRating)}
-                </Text>
-                <Icon name="star" size={16} color="#FFD700" />
-                <Text style={styles.businessText}>Supplier Rating</Text>
-              </View>
-              <Text style={styles.businessText}>
-                {scooter.supplierRatingCount} Supplier User Ratings
+        <View style={styles.unitsContainer}>
+          <Text style={styles.unitsTitle}>Available Units</Text>
+          {filters.sortOrder !== "none" && (
+            <View>
+              <Text
+                style={{
+                  marginBottom: 10,
+                  color: "#000000",
+                  justifyContent: "center",
+                  alignContent: "center",
+                  marginTop: 8,
+                  width: "25%",
+                  paddingVertical: 8,
+                  paddingHorizontal: 10,
+                  borderRadius: 5,
+                  backgroundColor: "#D4D4D4",
+                }}
+              >
+                {filters.sortOrder === "nearest" ? "Nearest" : "Farthest"}
               </Text>
-            </TouchableOpacity>
-          ))
-        ) : (
-          <Text style={styles.noResults}>No vehicles available</Text>
-        )}
-      </View>
-    </ScrollView>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.scooterList}>
+          {isLoading ? (
+            <View
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                alignItems: "center",
+                paddingVertical: 50,
+              }}
+            >
+              <ActivityIndicator size="large" color="#4a5565" />
+            </View>
+          ) : scooters.length > 0 ? (
+            scooters.map((scooter) => (
+              <TouchableOpacity
+                key={scooter.id}
+                style={styles.scooterCard}
+                onPress={() =>
+                  navigation.navigate("MotorcycleDetail", {
+                    motorcycle: scooter,
+                  })
+                }
+              >
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {scooter.images.map((imgUrl, index) => (
+                    <Image
+                      key={index}
+                      source={{ uri: imgUrl }}
+                      style={styles.scooterImage}
+                    />
+                  ))}
+                </ScrollView>
+
+                <View style={styles.floatingBox}>
+                  <Text style={styles.floatingText}>
+                    ₱{scooter.pricePerDay}/day
+                  </Text>
+                </View>
+
+                <Text style={styles.scooterName}>{scooter.name}</Text>
+                <View style={styles.starLocation}>
+                  {renderStars(scooter.vehicleRating ?? 0)}
+                  <Icon name="location-pin" size={16} color="#4a5565" />
+                </View>
+                <Text style={styles.locationText}>
+                  {scooter.businessAddress}
+                </Text>
+                {scooter.distance !== null && (
+                  <Text
+                    style={[
+                      styles.locationText,
+                      { fontStyle: "italic", color: "#4a5565" },
+                    ]}
+                  >
+                    📍 {scooter.distance.toFixed(2)} km Away From You
+                  </Text>
+                )}
+                <View style={styles.businessDetail}>
+                  <Image
+                    source={{ uri: scooter?.businessProfile }}
+                    style={styles.smallIcon}
+                  />
+                  <Text style={styles.businessText}>
+                    {scooter.businessName}
+                  </Text>
+                  {scooter.businessVerified ? (
+                    <Icon name="verified" size={16} color="#4a5565" />
+                  ) : (
+                    <Icon name="help" size={16} color="#4a5565" />
+                  )}
+                </View>
+
+                <View style={styles.businessRating}>
+                  <Text style={styles.textRating}>
+                    {scooter.supplierRating}
+                  </Text>
+                  <Text style={styles.textRating}>
+                    {RatingStatus(scooter.supplierRating)}
+                  </Text>
+                  <Icon name="star" size={16} color="#FFD700" />
+                  <Text style={styles.businessText}>Supplier Rating</Text>
+                </View>
+                <Text style={styles.businessText}>
+                  {scooter.supplierRatingCount} Supplier User Ratings
+                </Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.noResults}>No vehicles available</Text>
+          )}
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -411,6 +427,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    position: "relative",
+  },
+
+  mapIcon: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    zIndex: 10, // Make sure it's above everything
+    backgroundColor: "#fff",
+    borderRadius: 50,
+    padding: 10,
+    elevation: 5, // For Android
+    shadowColor: "#000", // For iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
 
   smallIcon: {

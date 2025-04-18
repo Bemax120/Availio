@@ -11,8 +11,9 @@ import {
 } from "react-native";
 import * as Location from "expo-location";
 import { useNavigation } from "@react-navigation/native";
-import MapView from "react-native-maps";
-
+import MapView, { Marker, Callout } from "react-native-maps";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../firebase/firebaseConfig";
 const screen = Dimensions.get("window");
 
 const MapPinScreen = () => {
@@ -21,6 +22,7 @@ const MapPinScreen = () => {
   const [centerLocation, setCenterLocation] = useState(null);
   const [address, setAddress] = useState(null);
   const [loadingAddress, setLoadingAddress] = useState(false);
+  const [userMarkers, setUserMarkers] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -45,6 +47,24 @@ const MapPinScreen = () => {
 
       fetchAddress(region.latitude, region.longitude);
     })();
+  }, []);
+
+  useEffect(() => {
+    const fetchUsersWithLocations = async () => {
+      const usersSnap = await getDocs(collection(db, "users"));
+      const usersWithLocation = usersSnap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter(
+          (user) =>
+            user.businessCoordinates &&
+            user.businessProfile &&
+            user.businessAddress
+        );
+
+      setUserMarkers(usersWithLocation);
+    };
+
+    fetchUsersWithLocations();
   }, []);
 
   const fetchAddress = async (latitude, longitude) => {
@@ -90,7 +110,55 @@ const MapPinScreen = () => {
           style={{ flex: 1 }}
           initialRegion={location}
           onRegionChangeComplete={handleRegionChangeComplete}
-        />
+        >
+          {userMarkers.map((user) => (
+            <Marker
+              key={user.id}
+              coordinate={{
+                latitude: user.businessCoordinates.latitude,
+                longitude: user.businessCoordinates.longitude,
+              }}
+              title={user.businessAddress}
+            >
+              <View
+                style={{
+                  backgroundColor: "#fff",
+                  padding: 4,
+                  borderRadius: 35,
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  elevation: 5,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 3,
+                }}
+              >
+                <Image
+                  source={{ uri: user.businessProfile }}
+                  style={{
+                    width: 25,
+                    height: 25,
+                    borderRadius: 50,
+                  }}
+                />
+              </View>
+              <Callout tooltip>
+                <View
+                  style={{
+                    backgroundColor: "white",
+                    padding: 10,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ fontWeight: "bold", maxWidth: 200 }}>
+                    {user.businessAddress}
+                  </Text>
+                </View>
+              </Callout>
+            </Marker>
+          ))}
+        </MapView>
       )}
 
       <View style={styles.markerFixed}>
