@@ -1,27 +1,49 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native"; 
-
-const defaultProfileImage = require("../assets/download.png"); 
-
+import { useNavigation } from "@react-navigation/native";
+const defaultProfileImage = require("../assets/download.png");
+import { signOut } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
+  const auth = getAuth();
+
+  useEffect(() => {
+    if (!auth.currentUser) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+    }
+  }, [auth.currentUser]);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const storedUser = await AsyncStorage.getItem("userData");
+
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          
+
           // ✅ Ensure a default profile image if null
           setUser({
             ...parsedUser,
-            profileImage: parsedUser.profileImage || Image.resolveAssetSource(defaultProfileImage).uri,
+            profileImage:
+              parsedUser.profileImage ||
+              Image.resolveAssetSource(defaultProfileImage).uri,
           });
         }
       } catch (error) {
@@ -34,17 +56,6 @@ const ProfilePage = () => {
     fetchUserData();
   }, []);
 
-  
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem("userData"); 
-      navigation.replace("Login"); 
-    } catch (error) {
-      console.error("❌ Logout Error:", error);
-      Alert.alert("Error", "Failed to log out. Please try again.");
-    }
-  };
-
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
@@ -53,20 +64,28 @@ const ProfilePage = () => {
     );
   }
 
-  if (!user) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Failed to load user data.</Text>
-      </View>
-    );
-  }
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("userData");
+      await signOut(auth);
+      navigation.replace("Filter");
+    } catch (error) {
+      console.error("❌ Logout Error:", error);
+      Alert.alert("Error", "Failed to log out. Please try again.");
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profileHeader}>
-        <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
+        <Image
+          source={{ uri: user.profileImage }}
+          style={styles.profileImage}
+        />
         <View style={styles.profileInfo}>
-          <Text style={styles.userName}>{user.firstName} {user.lastName}</Text>
+          <Text style={styles.userName}>
+            {user.firstName} {user.lastName}
+          </Text>
           <View style={styles.ridesBadge}>
             <Ionicons name="bicycle" size={18} color="white" />
             <Text style={styles.ridesText}>{user.numRides} Rides</Text>
@@ -82,7 +101,9 @@ const ProfilePage = () => {
             <Text style={styles.infoLabel}>Email Address</Text>
             <Text style={styles.infoValue}>{user.email}</Text>
           </View>
-          {user.emailVerified && <Ionicons name="checkmark-circle" size={20} color="#4CD964" />}
+          {user.emailVerified && (
+            <Ionicons name="checkmark-circle" size={20} color="#4CD964" />
+          )}
         </View>
 
         <View style={styles.infoItem}>
@@ -106,7 +127,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F5F5F5" },
   loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   errorText: { textAlign: "center", marginTop: 20, fontSize: 16, color: "red" },
-  profileHeader: { flexDirection: "row", padding: 20, backgroundColor: "white", marginBottom: 15 },
+  profileHeader: {
+    flexDirection: "row",
+    padding: 20,
+    backgroundColor: "white",
+    marginBottom: 15,
+  },
   profileImage: { width: 80, height: 80, borderRadius: 40 },
   imagePlaceholder: {
     width: 80,
@@ -130,7 +156,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   ridesText: { color: "white", marginLeft: 6, fontWeight: "600" },
-  section: { backgroundColor: "white", marginBottom: 15, paddingHorizontal: 20 },
+  section: {
+    backgroundColor: "white",
+    marginBottom: 15,
+    paddingHorizontal: 20,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",

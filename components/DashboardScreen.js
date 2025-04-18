@@ -9,6 +9,7 @@ import {
   TextInput,
   RefreshControl,
   BackHandler,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -48,9 +49,10 @@ const DashboardScreen = ({ route }) => {
   const [allScooters, setAllScooters] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
-
+  const [isLoading, setIsLoading] = useState(true);
   // Function to fetch scooters from Firestore
   const fetchScooters = useCallback(() => {
+    setIsLoading(true); // start loading here
     const scootersRef = collection(db, "vehicles");
 
     const unsubscribe = onSnapshot(scootersRef, async (snapshot) => {
@@ -151,6 +153,7 @@ const DashboardScreen = ({ route }) => {
 
       setScooters(sortedList);
       setAllScooters(sortedList);
+      setIsLoading(false); // done loading
     });
 
     return unsubscribe;
@@ -318,7 +321,18 @@ const DashboardScreen = ({ route }) => {
       </View>
 
       <View style={styles.scooterList}>
-        {scooters.length > 0 ? (
+        {isLoading ? (
+          <View
+            style={{
+              width: "100%",
+              justifyContent: "center",
+              alignItems: "center",
+              paddingVertical: 50,
+            }}
+          >
+            <ActivityIndicator size="large" color="#4a5565" />
+          </View>
+        ) : scooters.length > 0 ? (
           scooters.map((scooter) => (
             <TouchableOpacity
               key={scooter.id}
@@ -567,6 +581,10 @@ const styles = StyleSheet.create({
   detailsButtonText: {
     color: "#fff",
     fontSize: 16,
+  },
+
+  noResults: {
+    padding: 20,
   },
 });
 

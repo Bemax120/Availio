@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -9,11 +9,12 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
+import { getAuth } from "firebase/auth";
 const { width } = Dimensions.get("window");
 
 const MotorcycleDetailScreen = ({ route, navigation }) => {
   const { motorcycle } = route.params;
+  const auth = getAuth();
 
   return (
     <ScrollView style={styles.container}>
@@ -59,9 +60,11 @@ const MotorcycleDetailScreen = ({ route, navigation }) => {
 
         <TouchableOpacity
           style={styles.dateButton}
-          onPress={() =>
-            navigation.navigate("DateTimePicker", { motorcycle: motorcycle })
-          }
+          onPress={() => {
+            auth.currentUser
+              ? navigation.navigate("DateTimePicker", { motorcycle })
+              : navigation.navigate("Login");
+          }}
         >
           <Text style={styles.dateButtonText}>Book Now</Text>
         </TouchableOpacity>
