@@ -25,6 +25,15 @@ const MotorcycleBookScreen = () => {
   const userId = auth.currentUser?.uid;
 
   useEffect(() => {
+    if (!auth.currentUser) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+    }
+  }, [auth.currentUser]);
+
+  useEffect(() => {
     if (!userId) return;
 
     setLoading(true);

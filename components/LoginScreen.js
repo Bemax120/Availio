@@ -159,6 +159,12 @@ const LoginScreen = ({ navigation }) => {
           Register Here.
         </Text>
       </Text>
+      <Text
+        onPress={() => navigation.navigate("Filter")}
+        style={styles.registerText}
+      >
+        Continue as Guest
+      </Text>
     </View>
   );
 };
