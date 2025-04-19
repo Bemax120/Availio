@@ -2,8 +2,13 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Calendar } from "react-native-calendars";
 import RNPickerSelect from "react-native-picker-select";
+import { useRoute } from "@react-navigation/native";
 
 export default function DateTimePickerScreen({ navigation }) {
+  const route = useRoute();
+
+  const vehicleType = route.params?.vehicleType || null;
+
   const [selectedDates, setSelectedDates] = useState({});
   const [pickUpTime, setPickUpTime] = useState("10:00 AM");
   const [returnTime, setReturnTime] = useState("9:00 PM");
@@ -60,6 +65,7 @@ export default function DateTimePickerScreen({ navigation }) {
       endDate,
       pickUpTime,
       returnTime,
+      vehicleType,
     });
   };
 
