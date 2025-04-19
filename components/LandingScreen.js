@@ -39,7 +39,7 @@ const LandingScreen = () => {
           }}
           onPress={() =>
             navigation.navigate("Filter", {
-              vehicleType: "2",
+              vehicleType: "2 Wheels",
             })
           }
         >
@@ -66,7 +66,7 @@ const LandingScreen = () => {
           }}
           onPress={() =>
             navigation.navigate("Filter", {
-              vehicleType: "4",
+              vehicleType: "4 Wheels",
             })
           }
         >

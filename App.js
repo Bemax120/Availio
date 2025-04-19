@@ -24,6 +24,7 @@ import MapPinScreen from "./components/MapPinScreen";
 import VehicleDetailScreen from "./components/VehicleDetailScreen";
 import LandingScreen from "./components/LandingScreen";
 import { useFonts } from "expo-font";
+import "react-native-get-random-values";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

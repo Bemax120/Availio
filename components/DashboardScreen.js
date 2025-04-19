@@ -22,6 +22,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import RNPickerSelect from "react-native-picker-select";
 
 const calculateDistance = (loc1, loc2) => {
   const toRad = (value) => (value * Math.PI) / 180;
@@ -43,6 +44,8 @@ const calculateDistance = (loc1, loc2) => {
 const DashboardScreen = ({ route }) => {
   const filters = route?.params?.filters || {};
   const locationFilter = filters.locationFilter;
+  const vehicleFilter = filters.vehicleType;
+
   const startDate = filters.startDate;
   const endDate = filters.endDate;
   const pickUpTime = filters.pickUpTime;
@@ -54,6 +57,79 @@ const DashboardScreen = ({ route }) => {
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
+
+  const [displacementFilter, setDisplacementFilter] = useState(null);
+  const [priceFilter, setPriceFilter] = useState(null);
+  const [vehicleRatingFilter, setVehicleRatingFilter] = useState(null);
+  const [businessRatingFilter, setBusinessRatingFilter] = useState(null);
+
+  const applyFilters = () => {
+    let filtered = [...allScooters];
+
+    // Vehicle Type
+    if (vehicleFilter) {
+      filtered = filtered.filter(
+        (scooter) => scooter.vehicleType === vehicleFilter
+      );
+    }
+
+    // Displacement Range
+    if (displacementFilter) {
+      const [min, max] = displacementFilter.split("-").map(Number);
+      filtered = filtered.filter((scooter) => {
+        const cc = parseInt(scooter.cchp);
+        return cc >= min && cc <= max;
+      });
+    }
+
+    // Price Filter
+    if (priceFilter) {
+      const [minPrice, maxPrice] = priceFilter.split("-").map(Number);
+      filtered = filtered.filter((scooter) => {
+        const price = parseFloat(scooter.pricePerDay);
+        return price >= minPrice && price <= maxPrice;
+      });
+    }
+
+    // Vehicle Rating Filter
+    if (vehicleRatingFilter) {
+      const [minRating, maxRating] = vehicleRatingFilter.split("-").map(Number);
+      filtered = filtered.filter((scooter) => {
+        const rating = parseFloat(scooter.vehicleRating);
+        return rating >= minRating && rating <= maxRating;
+      });
+    }
+
+    if (businessRatingFilter) {
+      const [minRating, maxRating] = businessRatingFilter
+        .split("-")
+        .map(Number);
+      filtered = filtered.filter((scooter) => {
+        const rating = parseFloat(scooter.supplierRating);
+        return rating >= minRating && rating <= maxRating;
+      });
+    }
+
+    // Search Filter
+    if (searchText.trim() !== "") {
+      const lowercaseSearch = searchText.toLowerCase();
+      filtered = filtered.filter((scooter) =>
+        scooter.name.toLowerCase().includes(lowercaseSearch)
+      );
+    }
+
+    // Sort by distance if specified
+    if (filters.sortOrder === "nearest") {
+      filtered.sort(
+        (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity)
+      );
+    } else if (filters.sortOrder === "farthest") {
+      filtered.sort((a, b) => (b.distance ?? 0) - (a.distance ?? 0));
+    }
+
+    setScooters(filtered);
+  };
+
   // Function to fetch scooters from Firestore
   const fetchScooters = useCallback(() => {
     setIsLoading(true); // start loading here
@@ -148,18 +224,9 @@ const DashboardScreen = ({ route }) => {
 
       const scootersList = await Promise.all(scooterPromises);
 
-      let sortedList = [...scootersList];
-      if (filters.sortOrder === "nearest") {
-        sortedList.sort(
-          (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity)
-        );
-      } else if (filters.sortOrder === "farthest") {
-        sortedList.sort((a, b) => (b.distance ?? 0) - (a.distance ?? 0));
-      }
-
-      setScooters(sortedList);
-      setAllScooters(sortedList);
-      setIsLoading(false); // done loading
+      setScooters(scootersList);
+      setAllScooters(scootersList);
+      setIsLoading(false);
     });
 
     return unsubscribe;
@@ -172,21 +239,6 @@ const DashboardScreen = ({ route }) => {
       return () => unsubscribe();
     }, [fetchScooters])
   );
-
-  // Handle search input change
-  const handleSearch = () => {
-    if (!searchText) {
-      setScooters(allScooters); // Reset to all scooters if search is empty
-      return;
-    }
-
-    const lowercaseSearch = searchText.toLowerCase();
-    const filteredScooters = allScooters.filter((scooter) =>
-      scooter.name.toLowerCase().startsWith(lowercaseSearch)
-    );
-
-    setScooters(filteredScooters);
-  };
 
   // Handle pull to refresh
   const onRefresh = useCallback(() => {
@@ -211,18 +263,17 @@ const DashboardScreen = ({ route }) => {
   );
 
   useEffect(() => {
-    if (!searchText) {
-      setScooters(allScooters);
-      return;
-    }
-
-    const lowercaseSearch = searchText.toLowerCase();
-    const filteredScooters = allScooters.filter((scooter) =>
-      scooter.name.toLowerCase().includes(lowercaseSearch)
-    );
-
-    setScooters(filteredScooters);
-  }, [searchText, allScooters]);
+    applyFilters();
+  }, [
+    allScooters,
+    displacementFilter,
+    priceFilter,
+    vehicleRatingFilter,
+    businessRatingFilter,
+    searchText,
+    vehicleFilter,
+    filters.sortOrder,
+  ]);
 
   const renderStars = (rating) => {
     const stars = [];
@@ -285,12 +336,178 @@ const DashboardScreen = ({ route }) => {
             placeholder="Search Scooter"
             value={searchText}
             onChangeText={setSearchText}
-            onSubmitEditing={handleSearch}
+            onSubmitEditing={applyFilters}
           />
-          <TouchableOpacity onPress={handleSearch} style={styles.searchIcon}>
+          <TouchableOpacity onPress={applyFilters} style={styles.searchIcon}>
             <Ionicons name="search" size={24} color="gray" />
           </TouchableOpacity>
         </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 12,
+            }}
+          >
+            <RNPickerSelect
+              onValueChange={(value) => setDisplacementFilter(value)}
+              value={displacementFilter}
+              items={[
+                { label: "100cc - 150cc", value: "100-150" },
+                { label: "150cc - 200cc", value: "150-200" },
+                { label: "200cc - 300cc", value: "200-300" },
+                { label: "300cc - 500cc", value: "300-500" },
+                { label: "500cc - 1000cc", value: "500-1000" },
+              ]}
+              style={{
+                inputIOS: {
+                  width: "auto",
+                  height: "auto",
+                  textAlign: "center",
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: "#ECECEC",
+                  color: "black",
+                  borderRadius: 100,
+                },
+                inputAndroid: {
+                  width: "auto",
+                  height: "auto",
+                  textAlign: "center",
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: "#ECECEC",
+                  color: "black",
+                  borderRadius: 100,
+                },
+                placeholder: {
+                  color: "#000000",
+                },
+              }}
+              useNativeAndroidPickerStyle={false}
+              placeholder={{ label: "Select Displacement", value: null }}
+            />
+
+            <RNPickerSelect
+              onValueChange={(value) => setPriceFilter(value)}
+              value={priceFilter}
+              items={[
+                { label: "Less Than ₱300", value: "300" },
+                { label: "₱300 - ₱500", value: "300-500" },
+                { label: "₱500 - ₱700", value: "500-700" },
+                { label: "₱700 - ₱1000", value: "700-1000" },
+                { label: "₱1000 - ₱1500", value: "1000-1500" },
+                { label: "Greater Than ₱1500", value: "1500" },
+              ]}
+              style={{
+                inputIOS: {
+                  width: "auto",
+                  height: "auto",
+                  textAlign: "center",
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: "#ECECEC",
+                  color: "black",
+                  borderRadius: 100,
+                },
+                inputAndroid: {
+                  width: "auto",
+                  height: "auto",
+                  textAlign: "center",
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: "#ECECEC",
+                  color: "black",
+                  borderRadius: 100,
+                },
+                placeholder: {
+                  color: "#000000",
+                },
+              }}
+              useNativeAndroidPickerStyle={false}
+              placeholder={{ label: "Select Price Range", value: null }}
+            />
+
+            <RNPickerSelect
+              onValueChange={(value) => setVehicleRatingFilter(value)}
+              value={vehicleRatingFilter}
+              items={[
+                { label: "★ ", value: "0-1" },
+                { label: "★★", value: "1-2" },
+                { label: "★★★", value: "2-3" },
+                { label: "★★★★", value: "3-4" },
+                { label: "★★★★★", value: "4-5" },
+              ]}
+              style={{
+                inputIOS: {
+                  width: "auto",
+                  height: "auto",
+                  textAlign: "center",
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: "#ECECEC",
+                  color: "black",
+                  borderRadius: 100,
+                },
+                inputAndroid: {
+                  width: "auto",
+                  height: "auto",
+                  textAlign: "center",
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: "#ECECEC",
+                  color: "black",
+                  borderRadius: 100,
+                },
+                placeholder: {
+                  color: "#000000",
+                },
+              }}
+              useNativeAndroidPickerStyle={false}
+              placeholder={{ label: "Select Vehicle Rating", value: null }}
+            />
+
+            <RNPickerSelect
+              onValueChange={(value) => setBusinessRatingFilter(value)}
+              value={businessRatingFilter}
+              items={[
+                { label: "★ ", value: "0-1" },
+                { label: "★★", value: "1-2" },
+                { label: "★★★", value: "2-3" },
+                { label: "★★★★", value: "3-4" },
+                { label: "★★★★★", value: "4-5" },
+              ]}
+              style={{
+                inputIOS: {
+                  width: "auto",
+                  height: "auto",
+                  textAlign: "center",
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: "#ECECEC",
+                  color: "black",
+                  borderRadius: 100,
+                },
+                inputAndroid: {
+                  width: "auto",
+                  height: "auto",
+                  textAlign: "center",
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor: "#ECECEC",
+                  color: "black",
+                  borderRadius: 100,
+                },
+                placeholder: {
+                  color: "#000000",
+                },
+              }}
+              useNativeAndroidPickerStyle={false}
+              placeholder={{ label: "Select Business Rating", value: null }}
+            />
+          </View>
+        </ScrollView>
 
         <View style={styles.unitsContainer}>
           <Text style={styles.unitsTitle}>Available Units</Text>
