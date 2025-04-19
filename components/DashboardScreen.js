@@ -135,6 +135,8 @@ const DashboardScreen = ({ route }) => {
           businessProfile: supplierData?.businessProfile || null,
           businessVerified: supplierData?.businessVerified || false,
           businessName: supplierData?.businessName || "Unknown",
+          businessEmail: supplierData?.businessEmail || "Unknown",
+          contactNumber: supplierData?.contactNumber || "Unknown",
           businessAddress: supplierData?.businessAddress || null,
           supplierRating: supplierAverageRating || 0,
           supplierRatingCount: supplierRatingCount || 0,
@@ -264,7 +266,7 @@ const DashboardScreen = ({ route }) => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, marginTop: 60, backgroundColor: "#FCFBF4" }}>
       <TouchableOpacity
         onPress={() => navigation.navigate("MapPinScreen")}
         style={styles.mapIcon}
@@ -292,26 +294,6 @@ const DashboardScreen = ({ route }) => {
 
         <View style={styles.unitsContainer}>
           <Text style={styles.unitsTitle}>Available Units</Text>
-          {filters.sortOrder !== "none" && (
-            <View>
-              <Text
-                style={{
-                  marginBottom: 10,
-                  color: "#000000",
-                  justifyContent: "center",
-                  alignContent: "center",
-                  marginTop: 8,
-                  width: "25%",
-                  paddingVertical: 8,
-                  paddingHorizontal: 10,
-                  borderRadius: 5,
-                  backgroundColor: "#D4D4D4",
-                }}
-              >
-                {filters.sortOrder === "nearest" ? "Nearest" : "Farthest"}
-              </Text>
-            </View>
-          )}
         </View>
 
         <View style={styles.scooterList}>
@@ -417,7 +399,7 @@ const DashboardScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#FCFBF4",
     position: "relative",
   },
 

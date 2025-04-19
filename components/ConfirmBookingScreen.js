@@ -91,6 +91,7 @@ export default function ConfirmBooking({ route, navigation }) {
 
       setLoading(false);
       Alert.alert("Success", "Booking confirmed!");
+      console.log(bookingId, totalPrice, motorcycle);
       navigation.navigate("Inquire", { bookingId, totalPrice, motorcycle });
     } catch (error) {
       console.error("ConfirmBooking Error:", error);
@@ -149,7 +150,7 @@ export default function ConfirmBooking({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, marginTop: 60, backgroundColor: "#FCFBF4" },
   imageCarousel: {
     backgroundColor: "#eee",
   },

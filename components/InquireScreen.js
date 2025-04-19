@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   BackHandler,
   Image,
+  ScrollView,
 } from "react-native";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
@@ -132,124 +133,128 @@ export default function InquireScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Booked</Text>
-      </View>
-
-      <View style={styles.container}>
-        <View style={styles.card}>
-          <Image
-            style={styles.vehicleImage}
-            source={{ uri: motorcycle.image }}
-          />
-          <Text style={styles.dateText}>{currentDate}</Text>
-          <Text style={styles.itemTitle}>
-            {motorcycleName || "No Motorcycle Name"}
-          </Text>
-          <Text style={styles.price}>₱{totalPrice}</Text>
-
-          <View style={styles.statusContainer}>
-            <Text
-              style={[
-                styles.statusText,
-                { color: bookingStatus === "Complete" ? "green" : "red" },
-              ]}
-            >
-              {bookingStatus === "Complete"
-                ? "Complete"
-                : bookingStatus === "Cancelled"
-                ? "Cancelled"
-                : "Waiting for Confirmation"}
-            </Text>
-          </View>
+    <ScrollView style={{ marginTop: 60, backgroundColor: "#FCFBF4" }}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Booked</Text>
         </View>
 
-        <View style={styles.detailContainer}>
-          <View style={styles.refundContainer}>
-            <View style={styles.refundItem}>
-              <Text style={styles.checkMark}>✅</Text>
-              <Text style={styles.refundText}>Can be refunded</Text>
-            </View>
-            <View style={styles.refundItem}>
-              <Text style={styles.crossMark}>❌</Text>
-              <Text style={styles.refundText}>Can't reschedule</Text>
-            </View>
-          </View>
-
-          <View style={styles.tenantInfoContainer}>
-            <Text style={styles.sectionTitle}>{motorcycle.businessName}</Text>
-            <Text style={styles.tenantContact}>
-              {motorcycle.businessEmail} • {motorcycle.contactNumber}
+        <View style={styles.container}>
+          <View style={styles.card}>
+            <Image
+              style={styles.vehicleImage}
+              source={{ uri: motorcycle.image || motorcycle.defaultImg }}
+            />
+            <Text style={(styles.dateText, { marginTop: 10 })}>
+              {currentDate}
             </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Pick Up Time</Text>
-            <Text style={styles.value}>
-              {formatDateTime(booking.pickupDate)}
+            <Text style={styles.itemTitle}>
+              {motorcycleName || "No Motorcycle Name"}
             </Text>
-          </View>
+            <Text style={styles.price}>₱{totalPrice}</Text>
 
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Return Time</Text>
-            <Text style={styles.value}>
-              {formatDateTime(booking.returnDate)}
-            </Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Rental Duration</Text>
-            <Text style={styles.value}>{rentalDuration}</Text>
-          </View>
-
-          {bookingStatus !== "Cancelled" && bookingStatus !== "Complete" ? (
-            <TouchableOpacity
-              style={styles.secondaryButton}
-              onPress={async () => {
-                try {
-                  const bookingRef = doc(db, "bookings", booking.id);
-                  await updateDoc(bookingRef, {
-                    bookingStatus: "Cancel",
-                  });
-                  navigation.navigate("HomeTabs", { screen: "Home" });
-                } catch (error) {
-                  console.error("Error updating booking status:", error);
-                }
-              }}
-            >
-              <Text style={styles.secondaryButtonText}>Cancel Booking</Text>
-            </TouchableOpacity>
-          ) : null}
-
-          {bookingStatus !== "Cancelled" && (
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={() => {
-                navigation.navigate("Chat", {
-                  bookingNumber: booking.id,
-                  itemName: motorcycle.name,
-                  vendorName: "Scooter Gaming PH",
-                });
-              }}
-            >
-              <Text style={styles.primaryButtonText}>
-                Contact the Rental Office
+            <View style={styles.statusContainer}>
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: bookingStatus === "Complete" ? "green" : "red" },
+                ]}
+              >
+                {bookingStatus === "Complete"
+                  ? "Complete"
+                  : bookingStatus === "Cancelled"
+                  ? "Cancelled"
+                  : "Waiting for Confirmation"}
               </Text>
-            </TouchableOpacity>
-          )}
-        </View>
+            </View>
+          </View>
 
-        <TouchableOpacity
-          style={styles.itemButton}
-          onPress={() => {
-            navigation.navigate("HomeTabs", { screen: "Home" });
-          }}
-        >
-          <Text style={styles.itemButtonText}>Return to Dashboard</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+          <View style={styles.detailContainer}>
+            <View style={styles.refundContainer}>
+              <View style={styles.refundItem}>
+                <Text style={styles.checkMark}>✅</Text>
+                <Text style={styles.refundText}>Can be refunded</Text>
+              </View>
+              <View style={styles.refundItem}>
+                <Text style={styles.crossMark}>❌</Text>
+                <Text style={styles.refundText}>Can't reschedule</Text>
+              </View>
+            </View>
+
+            <View style={styles.tenantInfoContainer}>
+              <Text style={styles.sectionTitle}>{motorcycle.businessName}</Text>
+              <Text style={styles.tenantContact}>
+                {motorcycle.businessEmail} • {motorcycle.contactNumber}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Pick Up Time</Text>
+              <Text style={styles.value}>
+                {formatDateTime(booking.pickupDate)}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Return Time</Text>
+              <Text style={styles.value}>
+                {formatDateTime(booking.returnDate)}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Rental Duration</Text>
+              <Text style={styles.value}>{rentalDuration}</Text>
+            </View>
+
+            {bookingStatus !== "Cancelled" && bookingStatus !== "Complete" ? (
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={async () => {
+                  try {
+                    const bookingRef = doc(db, "bookings", booking.id);
+                    await updateDoc(bookingRef, {
+                      bookingStatus: "Cancel",
+                    });
+                    navigation.navigate("HomeTabs", { screen: "Home" });
+                  } catch (error) {
+                    console.error("Error updating booking status:", error);
+                  }
+                }}
+              >
+                <Text style={styles.secondaryButtonText}>Cancel Booking</Text>
+              </TouchableOpacity>
+            ) : null}
+
+            {bookingStatus !== "Cancelled" && (
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => {
+                  navigation.navigate("Chat", {
+                    bookingNumber: booking.id,
+                    itemName: motorcycle.name,
+                    vendorName: "Scooter Gaming PH",
+                  });
+                }}
+              >
+                <Text style={styles.primaryButtonText}>
+                  Contact the Rental Office
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <TouchableOpacity
+            style={styles.itemButton}
+            onPress={() => {
+              navigation.navigate("HomeTabs", { screen: "Home" });
+            }}
+          >
+            <Text style={styles.itemButtonText}>Return to Dashboard</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </ScrollView>
   );
 }
 

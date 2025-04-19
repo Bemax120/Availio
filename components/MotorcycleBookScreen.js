@@ -232,6 +232,7 @@ const MotorcycleBookScreen = () => {
                 <TouchableOpacity
                   style={styles.secondaryButton}
                   onPress={() => {
+                    console.log(item.id, item.total, item);
                     navigation.navigate("Inquire", {
                       bookingId: item.id,
                       totalPrice: item.total,
@@ -277,13 +278,12 @@ const MotorcycleBookScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#F5F5F5" },
+  container: { backgroundColor: "#FCFBF4" },
   screenTitle: {
     fontSize: 28,
     fontWeight: "800",
     color: "#333",
     padding: 20,
-    backgroundColor: "white",
   },
   segmentScroll: {
     marginVertical: 10,
