@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
+  TextInput,
 } from "react-native";
 import * as Location from "expo-location";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -19,12 +20,34 @@ const screen = Dimensions.get("window");
 const MapPinScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
+
+  const vehicleType = route.params?.vehicleType || null;
+  const startDate = route.params?.startDate;
+  const endDate = route.params?.endDate;
+  const pickUpTime = route.params?.pickUpTime;
+  const returnTime = route.params?.returnTime;
+
   const [location, setLocation] = useState(null);
   const [centerLocation, setCenterLocation] = useState(null);
   const [address, setAddress] = useState(null);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [userMarkers, setUserMarkers] = useState([]);
-  const vehicleType = route.params?.vehicleType || null;
+  const mapRef = useRef(null);
+  const [searchText, setSearchText] = useState("");
+
+  const debounceTimeout = useRef(null);
+
+  useEffect(() => {
+    if (!searchText.trim()) return;
+
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      handleManualSearch(); // Perform geocoding fallback
+    }, 1000); // 1 second debounce
+  }, [searchText]);
 
   useEffect(() => {
     (async () => {
@@ -69,6 +92,53 @@ const MapPinScreen = () => {
     fetchUsersWithLocations();
   }, []);
 
+  const handleManualSearch = async () => {
+    if (!searchText.trim()) return;
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+          searchText
+        )}&format=json&limit=1`,
+        {
+          headers: {
+            "User-Agent": "Availio/1.0 (kennethrex456@gmail.com)", // Replace with your app/email
+            "Accept-Language": "en",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.length > 0) {
+        const result = data[0];
+        const lat = parseFloat(result.lat);
+        const lon = parseFloat(result.lon);
+
+        const newRegion = {
+          latitude: lat,
+          longitude: lon,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        };
+
+        setLocation(newRegion);
+        setCenterLocation({ latitude: lat, longitude: lon });
+
+        if (mapRef.current) {
+          mapRef.current.animateToRegion(newRegion, 1000);
+        }
+
+        fetchAddress(lat, lon);
+      } else {
+        Alert.alert("Location not found", "Try a more specific query.");
+      }
+    } catch (error) {
+      console.error("Nominatim search failed:", error);
+      Alert.alert("Search error", "Something went wrong while searching.");
+    }
+  };
+
   const fetchAddress = async (latitude, longitude) => {
     try {
       setLoadingAddress(true);
@@ -100,6 +170,10 @@ const MapPinScreen = () => {
         locationFilter: centerLocation,
         locationAddress: address,
         vehicleType,
+        startDate,
+        endDate,
+        pickUpTime,
+        returnTime,
       });
     } else {
       Alert.alert("Location not selected");
@@ -108,8 +182,20 @@ const MapPinScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <TextInput
+            placeholder="Search for a location"
+            value={searchText}
+            onChangeText={setSearchText}
+            style={styles.textInput}
+          />
+        </View>
+      </View>
+
       {location && (
         <MapView
+          ref={mapRef}
           style={{ flex: 1 }}
           initialRegion={location}
           onRegionChangeComplete={handleRegionChangeComplete}
@@ -192,6 +278,32 @@ const MapPinScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  searchBox: {
+    position: "absolute",
+    top: 10,
+    width: "90%",
+    alignSelf: "center",
+    zIndex: 999,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  textInput: {
+    fontSize: 16,
+  },
+  searchContainer: {
+    position: "absolute",
+    top: 50,
+    left: 10,
+    right: 10,
+    zIndex: 999,
+  },
   markerFixed: {
     position: "absolute",
     top: screen.height / 2 - 40,

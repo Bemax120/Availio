@@ -10,7 +10,7 @@ import {
 import RNPickerSelect from "react-native-picker-select";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 
 const EnhancedFilterScreen = () => {
   const navigation = useNavigation();
@@ -60,14 +60,53 @@ const EnhancedFilterScreen = () => {
     navigation.replace("HomeTabs", { filters });
   };
 
+  let topGradient = "";
+  let bottomGradient = "";
+
+  if (vehicleType === "2 Wheels") {
+    topGradient = "#ffa3a6";
+    bottomGradient = "#ffeded";
+  } else {
+    topGradient = "#6497b1";
+    bottomGradient = "#b3cde0";
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <LinearGradient
-        colors={["#ffa3a6", "#ffeded"]}
+        colors={[topGradient, bottomGradient]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.headerContainer}
-      ></LinearGradient>
+      >
+        <TouchableOpacity
+          style={{
+            flexDirection: "row",
+            gap: 12,
+          }}
+          onPress={() => navigation.navigate("Landing")}
+        >
+          <Ionicons name="arrow-back" size={30} color="black" />
+          <Text style={{ fontSize: 20, fontFamily: "Inter-Regular" }}>
+            All {vehicleType}
+          </Text>
+        </TouchableOpacity>
+        {vehicleType === "2 Wheels" ? (
+          <MaterialIcons
+            style={{ position: "absolute", bottom: 30, right: 25 }}
+            name="two-wheeler"
+            size={75}
+            color="red"
+          />
+        ) : (
+          <Ionicons
+            style={{ position: "absolute", bottom: 30, right: 25 }}
+            name="car-sport"
+            size={75}
+            color="blue"
+          />
+        )}
+      </LinearGradient>
 
       <View style={styles.container}>
         <TouchableOpacity
@@ -97,7 +136,10 @@ const EnhancedFilterScreen = () => {
             marginBottom: 20,
           }}
           onPress={() => {
-            navigation.navigate("DateTimePicker", { vehicleType });
+            navigation.navigate("DateTimePicker", {
+              vehicleType,
+              locationAddress,
+            });
           }}
         >
           <Ionicons name="calendar" size={20} color="gray" />
@@ -194,7 +236,16 @@ const EnhancedFilterScreen = () => {
           style={{ flexDirection: "row", justifyContent: "center", gap: 12 }}
         >
           <TouchableOpacity
-            onPress={() => navigation.navigate("MapPinScreen")}
+            onPress={() =>
+              navigation.navigate("MapPinScreen", {
+                vehicleType,
+                locationAddress,
+                startDate,
+                endDate,
+                pickUpTime,
+                returnTime,
+              })
+            }
             style={{
               paddingHorizontal: 12,
               borderColor: "gray",
@@ -245,7 +296,8 @@ const styles = StyleSheet.create({
     color: "#444",
   },
   headerContainer: {
-    height: 100,
+    position: "relative",
+    height: 150,
     padding: 16,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
