@@ -1,38 +1,14 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Modal,
-} from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Calendar } from "react-native-calendars";
 import RNPickerSelect from "react-native-picker-select";
-import {
-  collection,
-  addDoc,
-  doc,
-  updateDoc,
-  arrayUnion,
-  setDoc,
-  Timestamp,
-} from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
-import { getAuth } from "firebase/auth";
 
-export default function DateTimePickerScreen({ route, navigation }) {
-  const { motorcycle } = route.params;
-  const auth = getAuth();
-
+export default function DateTimePickerScreen({ navigation }) {
   const [selectedDates, setSelectedDates] = useState({});
   const [pickUpTime, setPickUpTime] = useState("10:00 AM");
   const [returnTime, setReturnTime] = useState("9:00 PM");
-  const [totalPrice, setTotalPrice] = useState(motorcycle.pricePerDay);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   const onDayPress = (day) => {
     if (!startDate || (startDate && endDate)) {
@@ -73,70 +49,18 @@ export default function DateTimePickerScreen({ route, navigation }) {
     return dates;
   };
 
-  const parseAMPMToDate = (dateStr, timeStr) => {
-    const [hoursMinutes, meridian] = timeStr.split(" ");
-    let [hours, minutes] = hoursMinutes.split(":").map(Number);
-
-    if (meridian === "PM" && hours !== 12) hours += 12;
-    if (meridian === "AM" && hours === 12) hours = 0;
-
-    const [year, month, day] = dateStr.split("-").map(Number);
-
-    return new Date(year, month - 1, day, hours, minutes);
-  };
-
-  useEffect(() => {
-    if (startDate && endDate) {
-      const daysSelected = Object.keys(selectedDates).length;
-      setTotalPrice(daysSelected * Number(motorcycle.pricePerDay));
-    }
-  }, [selectedDates, motorcycle.pricePerDay]);
-
-  const handleBooking = async () => {
+  const confirmSelection = () => {
     if (!startDate || !endDate) {
-      Alert.alert("Error", "Please select a start and end date.");
+      Alert.alert("Missing Info", "Please select a start and end date.");
       return;
     }
 
-    if (!auth.currentUser) {
-      Alert.alert("Error", "You must be logged in to book.");
-      return;
-    }
-
-    const userId = auth.currentUser.uid;
-
-    try {
-      const parsedPickup = parseAMPMToDate(startDate, pickUpTime);
-      const parsedReturn = parseAMPMToDate(endDate, returnTime);
-
-      const bookingData = {
-        createdAt: Timestamp.now(),
-        pickupDate: Timestamp.fromDate(parsedPickup),
-        returnDate: Timestamp.fromDate(parsedReturn),
-        renterId: userId,
-        totalPrice,
-        vehicleId: motorcycle.id,
-        bookingStatus: "Pending",
-        rated: false,
-      };
-
-      setLoading(true);
-
-      const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
-      const bookingId = bookingRef.id;
-
-      const userBookingRef = doc(db, "users", userId, "myBooking", bookingId);
-      await setDoc(userBookingRef, { bookingId });
-
-      setLoading(false);
-      Alert.alert("Success", "Your booking has been saved!");
-
-      navigation.navigate("Inquire", { bookingId, totalPrice, motorcycle });
-    } catch (error) {
-      console.error("Booking Error:", error);
-      setLoading(false);
-      Alert.alert("Error", "Failed to save booking. Please try again.");
-    }
+    navigation.navigate("Filter", {
+      startDate,
+      endDate,
+      pickUpTime,
+      returnTime,
+    });
   };
 
   return (
@@ -152,6 +76,7 @@ export default function DateTimePickerScreen({ route, navigation }) {
           arrowColor: "red",
         }}
       />
+
       <View style={styles.pickerContainer}>
         <Text>Pick-up time</Text>
         <RNPickerSelect
@@ -159,10 +84,12 @@ export default function DateTimePickerScreen({ route, navigation }) {
           items={[
             { label: "10:00 AM", value: "10:00 AM" },
             { label: "11:00 AM", value: "11:00 AM" },
+            { label: "12:00 PM", value: "12:00 PM" },
           ]}
           value={pickUpTime}
         />
       </View>
+
       <View style={styles.pickerContainer}>
         <Text>Return time</Text>
         <RNPickerSelect
@@ -170,31 +97,15 @@ export default function DateTimePickerScreen({ route, navigation }) {
           items={[
             { label: "9:00 PM", value: "9:00 PM" },
             { label: "10:00 PM", value: "10:00 PM" },
+            { label: "11:00 PM", value: "11:00 PM" },
           ]}
           value={returnTime}
         />
       </View>
-      <View style={styles.footer}>
-        <Text style={styles.priceText}>₱{totalPrice}</Text>
-        <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
-          <Text style={styles.bookButtonText}>Book Now</Text>
-        </TouchableOpacity>
-      </View>
-      <Modal visible={loading} transparent animationType="fade">
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <ActivityIndicator size="large" color="red" />
-          <Text style={{ color: "white", marginTop: 10 }}>
-            Processing your booking...
-          </Text>
-        </View>
-      </Modal>
+
+      <TouchableOpacity style={styles.confirmButton} onPress={confirmSelection}>
+        <Text style={styles.confirmButtonText}>Confirm</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -202,36 +113,26 @@ export default function DateTimePickerScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
+    padding: 16,
+    paddingTop: 40,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
+    fontWeight: "bold",
     marginBottom: 20,
-    textAlign: "center",
   },
   pickerContainer: {
-    marginVertical: 10,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     marginTop: 20,
   },
-  priceText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "red",
-  },
-  bookButton: {
+  confirmButton: {
     backgroundColor: "red",
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 5,
+    padding: 16,
+    borderRadius: 10,
+    marginTop: 30,
+    alignItems: "center",
   },
-  bookButtonText: {
+  confirmButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontWeight: "bold",
   },
 });

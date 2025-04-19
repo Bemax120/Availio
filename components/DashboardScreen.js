@@ -43,6 +43,10 @@ const calculateDistance = (loc1, loc2) => {
 const DashboardScreen = ({ route }) => {
   const filters = route?.params?.filters || {};
   const locationFilter = filters.locationFilter;
+  const startDate = filters.startDate;
+  const endDate = filters.endDate;
+  const pickUpTime = filters.pickUpTime;
+  const returnTime = filters.returnTime;
 
   const [searchText, setSearchText] = useState("");
   const [scooters, setScooters] = useState([]);
@@ -286,23 +290,6 @@ const DashboardScreen = ({ route }) => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.bannerContainer}
-        >
-          <View style={styles.banner}>
-            <Text style={styles.bannerText}>
-              Enjoy Scooter Gaming Services and pay easily
-            </Text>
-          </View>
-          <View style={styles.banner}>
-            <Text style={styles.bannerText}>
-              Enjoy Scooter Gaming Services and pay easily
-            </Text>
-          </View>
-        </ScrollView>
-
         <View style={styles.unitsContainer}>
           <Text style={styles.unitsTitle}>Available Units</Text>
           {filters.sortOrder !== "none" && (
@@ -345,8 +332,12 @@ const DashboardScreen = ({ route }) => {
                 key={scooter.id}
                 style={styles.scooterCard}
                 onPress={() =>
-                  navigation.navigate("MotorcycleDetail", {
+                  navigation.navigate("VehicleDetail", {
                     motorcycle: scooter,
+                    startDate,
+                    endDate,
+                    pickUpTime,
+                    returnTime,
                   })
                 }
               >
@@ -492,21 +483,21 @@ const styles = StyleSheet.create({
   },
 
   searchContainer: {
+    justifyContent: "center",
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
+    marginBottom: 10,
   },
 
   searchBar: {
     flex: 1,
-    height: 40,
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
-    marginBottom: 10,
   },
 
   searchIcon: {
