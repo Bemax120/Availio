@@ -155,6 +155,7 @@ const EnhancedFilterScreen = () => {
             borderRadius: 100,
             gap: 5,
             marginBottom: 20,
+            alignItems: "center",
           }}
         >
           <RNPickerSelect
@@ -166,7 +167,26 @@ const EnhancedFilterScreen = () => {
               { label: "Farthest First", value: "farthest" },
             ]}
             useNativeAndroidPickerStyle={false}
-            style={{ flex: 1 }}
+            style={{
+              inputIOS: {
+                width: "auto",
+                height: "auto",
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                color: "black",
+              },
+              inputAndroid: {
+                width: "auto",
+                height: "auto",
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                color: "black",
+              },
+              placeholder: {
+                color: "#888",
+              },
+            }}
+            placeholder={{ label: "Select sorting", value: null }}
           />
         </View>
 

@@ -53,6 +53,7 @@ function HomeTabs({ route }) {
     >
       <Tab.Screen
         name="Home"
+        options={{ headerShown: false }}
         initialParams={{ filters }}
         component={DashboardScreen}
       />
@@ -84,7 +85,11 @@ const App = () => {
           options={{ headerShown: false }}
         />
         <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="MapPinScreen" component={MapPinScreen} />
+        <Stack.Screen
+          name="MapPinScreen"
+          options={{ headerShown: false }}
+          component={MapPinScreen}
+        />
         <Stack.Screen
           name="Filter"
           component={EnhancedFilterScreen}
@@ -100,13 +105,41 @@ const App = () => {
           component={MotorcycleListScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} />
-        <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} />
-        <Stack.Screen name="DateTimePicker" component={DateTimePickerScreen} />
-        <Stack.Screen name="Rating" component={RatingScreen} />
-        <Stack.Screen name="Payment" component={PaymentScreen} />
-        <Stack.Screen name="PaymentDetails" component={PaymentDetailsScreen} />
-        <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} />
+        <Stack.Screen
+          name="ConfirmBooking"
+          options={{ headerShown: false }}
+          component={ConfirmBookingScreen}
+        />
+        <Stack.Screen
+          name="VehicleDetail"
+          options={{ headerShown: false }}
+          component={VehicleDetailScreen}
+        />
+        <Stack.Screen
+          name="DateTimePicker"
+          options={{ headerShown: false }}
+          component={DateTimePickerScreen}
+        />
+        <Stack.Screen
+          name="Rating"
+          options={{ headerShown: false }}
+          component={RatingScreen}
+        />
+        <Stack.Screen
+          name="Payment"
+          options={{ headerShown: false }}
+          component={PaymentScreen}
+        />
+        <Stack.Screen
+          name="PaymentDetails"
+          options={{ headerShown: false }}
+          component={PaymentDetailsScreen}
+        />
+        <Stack.Screen
+          name="PaymentSuccess"
+          options={{ headerShown: false }}
+          component={PaymentSuccessScreen}
+        />
         <Stack.Screen
           name="Inquire"
           component={InquireScreen}

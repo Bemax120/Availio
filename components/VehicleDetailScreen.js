@@ -72,7 +72,8 @@ const VehicleDetailScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    marginTop: 60,
+    backgroundColor: "#FCFBF4",
     paddingTop: 20,
   },
   imageCarousel: {
