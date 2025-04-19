@@ -12,8 +12,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { getAuth } from "firebase/auth";
 const { width } = Dimensions.get("window");
 
-const MotorcycleDetailScreen = ({ route, navigation }) => {
-  const { motorcycle } = route.params;
+const VehicleDetailScreen = ({ route, navigation }) => {
+  const { motorcycle, startDate, endDate, pickUpTime, returnTime } =
+    route.params;
   const auth = getAuth();
 
   return (
@@ -43,26 +44,21 @@ const MotorcycleDetailScreen = ({ route, navigation }) => {
           {motorcycle.businessAddress}
         </Text>
 
-        <View style={styles.addOns}>
-          <Text style={styles.addOnsTitle}>Add Ons:</Text>
-          <View style={styles.addOnItem}>
-            <Image
-              source={{ uri: "path/to/extra-helmet-image" }}
-              style={styles.addOnImage}
-            />
-            <Text style={styles.addOnText}>Extra Helmet</Text>
-          </View>
-        </View>
-
         <View style={styles.priceContainer}>
-          <Text style={styles.price}>{motorcycle.pricePerDay} Per Day</Text>
+          <Text style={styles.price}>₱{motorcycle.pricePerDay} Per Day</Text>
         </View>
 
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => {
             auth.currentUser
-              ? navigation.navigate("DateTimePicker", { motorcycle })
+              ? navigation.navigate("ConfirmBooking", {
+                  motorcycle,
+                  startDate,
+                  endDate,
+                  pickUpTime,
+                  returnTime,
+                })
               : navigation.navigate("Login");
           }}
         >
@@ -77,9 +73,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    paddingTop: 20,
   },
   imageCarousel: {
-    height: 250,
     backgroundColor: "#eee",
   },
   image: {
@@ -132,6 +128,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 5,
     alignItems: "center",
+    borderRadius: 100,
   },
   dateButtonText: {
     color: "#fff",
@@ -139,4 +136,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MotorcycleDetailScreen;
+export default VehicleDetailScreen;
