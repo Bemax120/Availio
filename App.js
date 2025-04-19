@@ -22,6 +22,8 @@ import EnhancedFilterScreen from "./components/EnhancedFilterScreen";
 import RatingScreen from "./components/RatingScreen";
 import MapPinScreen from "./components/MapPinScreen";
 import VehicleDetailScreen from "./components/VehicleDetailScreen";
+import LandingScreen from "./components/LandingScreen";
+import { useFonts } from "expo-font";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -62,9 +64,20 @@ function HomeTabs({ route }) {
 }
 
 const App = () => {
+  useFonts({
+    "Inter-Regular": require("./fonts/Inter-Regular.ttf"),
+    "Inter-Semibold": require("./fonts/Inter-Semibold.ttf"),
+    "Inter-Bold": require("./fonts/Inter-Bold.ttf"),
+  });
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
+      <Stack.Navigator initialRouteName="Landing">
+        <Stack.Screen
+          name="Landing"
+          component={LandingScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="Login"
           component={LoginScreen}

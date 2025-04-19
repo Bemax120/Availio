@@ -10,19 +10,21 @@ import {
   ActivityIndicator,
 } from "react-native";
 import * as Location from "expo-location";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 const screen = Dimensions.get("window");
 
 const MapPinScreen = () => {
+  const route = useRoute();
   const navigation = useNavigation();
   const [location, setLocation] = useState(null);
   const [centerLocation, setCenterLocation] = useState(null);
   const [address, setAddress] = useState(null);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [userMarkers, setUserMarkers] = useState([]);
+  const vehicleType = route.params?.vehicleType || null;
 
   useEffect(() => {
     (async () => {
@@ -96,7 +98,8 @@ const MapPinScreen = () => {
     if (centerLocation) {
       navigation.navigate("Filter", {
         locationFilter: centerLocation,
-        locationAddress: address, // ← ADD THIS
+        locationAddress: address,
+        vehicleType,
       });
     } else {
       Alert.alert("Location not selected");

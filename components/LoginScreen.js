@@ -23,6 +23,7 @@ import { SocialIcon } from "react-native-elements";
 import { auth, db } from "../firebase/firebaseConfig";
 
 const defaultProfileImage = require("../assets/download.png");
+const Availio = require("../assets/Availio.png");
 
 const LoginScreen = ({ navigation }) => {
   const [identifier, setIdentifier] = useState("");
@@ -109,9 +110,28 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Enter your email/username and password to continue
+      <View
+        style={{
+          width: "100%",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignContent: "center",
+        }}
+      >
+        <Image style={{ width: 100, height: 100 }} source={Availio} />
+      </View>
+      <Text
+        style={{
+          fontSize: 24,
+          marginTop: 10,
+          textAlign: "center",
+          fontWeight: "bold",
+          color: "#333",
+        }}
+      >
+        Login
       </Text>
+      <Text style={styles.title}>Login Now To Continue Booking!</Text>
 
       <TextInput
         style={styles.input}
@@ -180,7 +200,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 20,
     textAlign: "center",
-    fontWeight: "bold",
     color: "#333",
   },
   input: {
@@ -201,7 +220,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: "#ff0000",
     padding: 15,
-    borderRadius: 5,
+    borderRadius: 100,
     alignItems: "center",
     marginBottom: 20,
   },

@@ -22,6 +22,7 @@ const EnhancedFilterScreen = () => {
     : "";
 
   const locationFilter = route.params?.locationFilter || null;
+  const vehicleType = route.params?.vehicleType || null;
   const startDate = route.params?.startDate;
   const endDate = route.params?.endDate;
   const pickUpTime = route.params?.pickUpTime;
@@ -44,6 +45,7 @@ const EnhancedFilterScreen = () => {
 
   const applyFilters = () => {
     const filters = {
+      vehicleType,
       locationFilter,
       sortOrder,
       startDate,
@@ -70,7 +72,7 @@ const EnhancedFilterScreen = () => {
       <View style={styles.container}>
         <TouchableOpacity
           style={styles.mapButton}
-          onPress={() => navigation.navigate("MapPinScreen")}
+          onPress={() => navigation.navigate("MapPinScreen", { vehicleType })}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             <Ionicons name="search" size={20} color="gray" />
@@ -95,7 +97,7 @@ const EnhancedFilterScreen = () => {
             marginBottom: 20,
           }}
           onPress={() => {
-            navigation.navigate("DateTimePicker");
+            navigation.navigate("DateTimePicker", { vehicleType });
           }}
         >
           <Ionicons name="calendar" size={20} color="gray" />
