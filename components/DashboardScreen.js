@@ -393,12 +393,12 @@ const DashboardScreen = ({ route }) => {
               onValueChange={(value) => setPriceFilter(value)}
               value={priceFilter}
               items={[
-                { label: "Less Than ₱300", value: "300" },
+                { label: "Less Than ₱300", value: "0-300" },
                 { label: "₱300 - ₱500", value: "300-500" },
                 { label: "₱500 - ₱700", value: "500-700" },
                 { label: "₱700 - ₱1000", value: "700-1000" },
                 { label: "₱1000 - ₱1500", value: "1000-1500" },
-                { label: "Greater Than ₱1500", value: "1500" },
+                { label: "Greater Than ₱1500", value: "1500-999999999" },
               ]}
               style={{
                 inputIOS: {
@@ -527,18 +527,9 @@ const DashboardScreen = ({ route }) => {
             </View>
           ) : scooters.length > 0 ? (
             scooters.map((scooter) => (
-              <TouchableOpacity
+              <View
+                style={{ width: "100%", backgroundColor: "#ffffff" }}
                 key={scooter.id}
-                style={styles.scooterCard}
-                onPress={() =>
-                  navigation.navigate("VehicleDetail", {
-                    motorcycle: scooter,
-                    startDate,
-                    endDate,
-                    pickUpTime,
-                    returnTime,
-                  })
-                }
               >
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {scooter.images.map((imgUrl, index) => (
@@ -549,60 +540,72 @@ const DashboardScreen = ({ route }) => {
                     />
                   ))}
                 </ScrollView>
+                <TouchableOpacity
+                  style={styles.scooterCard}
+                  onPress={() =>
+                    navigation.navigate("VehicleDetail", {
+                      motorcycle: scooter,
+                      startDate,
+                      endDate,
+                      pickUpTime,
+                      returnTime,
+                    })
+                  }
+                >
+                  <View style={styles.floatingBox}>
+                    <Text style={styles.floatingText}>
+                      ₱{scooter.pricePerDay}/day
+                    </Text>
+                  </View>
 
-                <View style={styles.floatingBox}>
-                  <Text style={styles.floatingText}>
-                    ₱{scooter.pricePerDay}/day
+                  <Text style={styles.scooterName}>{scooter.name}</Text>
+                  <View style={styles.starLocation}>
+                    {renderStars(scooter.vehicleRating ?? 0)}
+                    <Icon name="location-pin" size={16} color="#4a5565" />
+                  </View>
+                  <Text style={styles.locationText}>
+                    {scooter.businessAddress}
                   </Text>
-                </View>
-
-                <Text style={styles.scooterName}>{scooter.name}</Text>
-                <View style={styles.starLocation}>
-                  {renderStars(scooter.vehicleRating ?? 0)}
-                  <Icon name="location-pin" size={16} color="#4a5565" />
-                </View>
-                <Text style={styles.locationText}>
-                  {scooter.businessAddress}
-                </Text>
-                {scooter.distance !== null && (
-                  <Text
-                    style={[
-                      styles.locationText,
-                      { fontStyle: "italic", color: "#4a5565" },
-                    ]}
-                  >
-                    📍 {scooter.distance.toFixed(2)} km Away From You
-                  </Text>
-                )}
-                <View style={styles.businessDetail}>
-                  <Image
-                    source={{ uri: scooter?.businessProfile }}
-                    style={styles.smallIcon}
-                  />
-                  <Text style={styles.businessText}>
-                    {scooter.businessName}
-                  </Text>
-                  {scooter.businessVerified ? (
-                    <Icon name="verified" size={16} color="#4a5565" />
-                  ) : (
-                    <Icon name="help" size={16} color="#4a5565" />
+                  {scooter.distance !== null && (
+                    <Text
+                      style={[
+                        styles.locationText,
+                        { fontStyle: "italic", color: "#4a5565" },
+                      ]}
+                    >
+                      📍 {scooter.distance.toFixed(2)} km Away From You
+                    </Text>
                   )}
-                </View>
+                  <View style={styles.businessDetail}>
+                    <Image
+                      source={{ uri: scooter?.businessProfile }}
+                      style={styles.smallIcon}
+                    />
+                    <Text style={styles.businessText}>
+                      {scooter.businessName}
+                    </Text>
+                    {scooter.businessVerified ? (
+                      <Icon name="verified" size={16} color="#4a5565" />
+                    ) : (
+                      <Icon name="help" size={16} color="#4a5565" />
+                    )}
+                  </View>
 
-                <View style={styles.businessRating}>
-                  <Text style={styles.textRating}>
-                    {scooter.supplierRating}
+                  <View style={styles.businessRating}>
+                    <Text style={styles.textRating}>
+                      {scooter.supplierRating}
+                    </Text>
+                    <Text style={styles.textRating}>
+                      {RatingStatus(scooter.supplierRating)}
+                    </Text>
+                    <Icon name="star" size={16} color="#FFD700" />
+                    <Text style={styles.businessText}>Supplier Rating</Text>
+                  </View>
+                  <Text style={styles.businessText}>
+                    {scooter.supplierRatingCount} Supplier User Ratings
                   </Text>
-                  <Text style={styles.textRating}>
-                    {RatingStatus(scooter.supplierRating)}
-                  </Text>
-                  <Icon name="star" size={16} color="#FFD700" />
-                  <Text style={styles.businessText}>Supplier Rating</Text>
-                </View>
-                <Text style={styles.businessText}>
-                  {scooter.supplierRatingCount} Supplier User Ratings
-                </Text>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
             ))
           ) : (
             <Text style={styles.noResults}>No vehicles available</Text>

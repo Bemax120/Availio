@@ -286,14 +286,14 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   segmentScroll: {
-    marginVertical: 10,
+    marginBottom: 20,
   },
 
   segmentContainer: {
     flexDirection: "row",
     gap: 10,
     paddingHorizontal: 10,
-    height: 40,
+    height: 50,
   },
 
   segmentButton: {
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    height: 38,
+    height: 40,
   },
 
   activeSegment: {
@@ -320,7 +320,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
   },
-  scrollContainer: { padding: 15 },
   bookingCard: {
     backgroundColor: "white",
     borderRadius: 15,
@@ -351,7 +350,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   placeholderText: { color: "white", fontSize: 12 },
-  bookingDetails: { flex: 1, marginLeft: 15, justifyContent: "space-between" },
+  bookingDetails: { flex: 1, marginLeft: 15 },
   bikeName: { fontSize: 18, fontWeight: "700", color: "#333" },
   totalText: { fontSize: 16, color: "#4CD964", fontWeight: "600" },
   actionButtons: {
@@ -375,7 +374,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   secondaryButtonText: { color: "#4b6584", fontWeight: "600" },
-  loaderContainer: { justifyContent: "center", alignItems: "center" },
+  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 });
 
 export default MotorcycleBookScreen;

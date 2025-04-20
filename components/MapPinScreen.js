@@ -15,6 +15,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
+import { Ionicons } from "@expo/vector-icons";
 const screen = Dimensions.get("window");
 
 const MapPinScreen = () => {
@@ -184,6 +185,22 @@ const MapPinScreen = () => {
     <View style={{ flex: 1 }}>
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("HomeTabs", {
+                locationFilter: centerLocation,
+                locationAddress: address,
+                vehicleType,
+                startDate,
+                endDate,
+                pickUpTime,
+                returnTime,
+              })
+            }
+          >
+            <Ionicons name="arrow-back" size={30} color="black" />
+          </TouchableOpacity>
+
           <TextInput
             placeholder="Search for a location"
             value={searchText}
@@ -259,7 +276,7 @@ const MapPinScreen = () => {
 
       <View style={styles.addressContainer}>
         {loadingAddress ? (
-          <ActivityIndicator color="#000" size="small" />
+          <ActivityIndicator color="#FCFBF4" size="small" />
         ) : (
           <Text style={styles.addressText}>
             {address || "Move the map to select a location"}
@@ -284,7 +301,7 @@ const styles = StyleSheet.create({
     width: "90%",
     alignSelf: "center",
     zIndex: 999,
-    backgroundColor: "#fff",
+    backgroundColor: "#FCFBF4",
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -293,6 +310,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    flexDirection: "row",
+    alignItems: "center",
   },
   textInput: {
     fontSize: 16,
