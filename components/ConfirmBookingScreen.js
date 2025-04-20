@@ -119,55 +119,118 @@ export default function ConfirmBooking({ route, navigation }) {
             ))}
         </ScrollView>
       </View>
+
       <View style={{ padding: 20 }}>
         <Text style={styles.title}>Confirm Booking</Text>
-        <Text>
-          Motorcycle: {motorcycle.name} - {motorcycle.brand}
-        </Text>
-        <Text>
-          From: {formattedStart} at {pickUpTime}
-        </Text>
-        <Text>
-          To: {formattedEnd} at {returnTime}
-        </Text>
-        <Text>Method Type: {methodType}</Text>
-        <Text>Total: ₱{totalPrice}</Text>
+
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryText}>
+            <Text style={styles.label}>Motorcycle: </Text>
+            {motorcycle.name} - {motorcycle.brand}
+          </Text>
+          <Text style={styles.summaryText}>
+            <Text style={styles.label}>From: </Text>
+            {formattedStart} at {pickUpTime}
+          </Text>
+          <Text style={styles.summaryText}>
+            <Text style={styles.label}>To: </Text>
+            {formattedEnd} at {returnTime}
+          </Text>
+          <Text style={styles.summaryText}>
+            <Text style={styles.label}>Method Type: </Text>
+            {methodType}
+          </Text>
+          <Text style={styles.totalPriceText}>Total: ₱{totalPrice}</Text>
+        </View>
 
         <TouchableOpacity style={styles.button} onPress={handleConfirmBooking}>
           <Text style={styles.buttonText}>Confirm Booking</Text>
         </TouchableOpacity>
-
-        <Modal visible={loading} transparent animationType="fade">
-          <View style={styles.modal}>
-            <ActivityIndicator size="large" color="red" />
-            <Text style={{ color: "white", marginTop: 10 }}>
-              Saving your booking...
-            </Text>
-          </View>
-        </Modal>
       </View>
+
+      <Modal visible={loading} transparent animationType="fade">
+        <View style={styles.modal}>
+          <ActivityIndicator size="large" color="#D70040" />
+          <Text style={{ color: "white", marginTop: 10 }}>
+            Saving your booking...
+          </Text>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 60, backgroundColor: "#FCFBF4" },
-  imageCarousel: {
-    backgroundColor: "#eee",
+  container: {
+    flex: 1,
+    paddingTop: 50,
+    backgroundColor: "#FCFBF4",
   },
+
+  imageCarousel: {
+    backgroundColor: "#f2f2f2",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: "hidden",
+    elevation: 4,
+  },
+
   image: {
     width: width,
-    height: 265,
+    height: 260,
   },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
+
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1c1c1e",
+    marginBottom: 10,
+  },
+
+  summaryCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 10,
+    elevation: 3,
+    marginBottom: 20,
+  },
+
+  summaryText: {
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 8,
+  },
+
+  label: {
+    fontWeight: "bold",
+    color: "#1c1c1e",
+  },
+
+  totalPriceText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 10,
+    color: "#D70040",
+  },
+
   button: {
-    backgroundColor: "red",
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 30,
+    backgroundColor: "#D70040",
+    paddingVertical: 15,
+    borderRadius: 10,
     alignItems: "center",
+    marginTop: 10,
   },
-  buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
+
+  buttonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+
   modal: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",

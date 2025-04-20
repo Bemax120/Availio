@@ -14,7 +14,7 @@ const LandingScreen = () => {
         backgroundColor: "#FCFBF4",
       }}
     >
-      <View style={{ paddingHorizontal: 15, paddingTop: 25 }}>
+      <View style={{ paddingHorizontal: 15, paddingTop: 35 }}>
         <Image
           source={Availio}
           style={{ width: 125, height: 75, resizeMode: "contain" }}
@@ -24,7 +24,7 @@ const LandingScreen = () => {
       <TouchableOpacity
         style={{
           flex: 1,
-          maxHeight: 85,
+          maxHeight: 100,
           marginHorizontal: 20,
 
           backgroundColor: "#E4A0F7",
@@ -50,7 +50,12 @@ const LandingScreen = () => {
           name="car-sport"
         />
         <Text
-          style={{ padding: 10, fontSize: 16, fontFamily: "Inter-Semibold" }}
+          style={{
+            fontWeight: "bold",
+            padding: 10,
+            fontSize: 16,
+            fontFamily: "Inter-Semibold",
+          }}
         >
           All Vehicles
         </Text>
@@ -60,13 +65,14 @@ const LandingScreen = () => {
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
-          paddingHorizontal: 20,
-          marginTop: 20,
+          marginTop: 10,
+          gap: 10,
+          marginHorizontal: 20,
         }}
       >
         <TouchableOpacity
           style={{
-            width: 175,
+            width: "48%",
             height: 85,
             backgroundColor: "#ffb3b3",
             borderRadius: 15,
@@ -93,7 +99,7 @@ const LandingScreen = () => {
 
         <TouchableOpacity
           style={{
-            width: 175,
+            width: "48%",
             height: 85,
             backgroundColor: "#b3cde0",
             borderRadius: 15,

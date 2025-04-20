@@ -163,12 +163,12 @@ const MotorcycleBookScreen = () => {
     <View style={styles.container}>
       <View style={{ backgroundColor: "#FCFBF4", zIndex: 999 }}>
         <Text style={styles.screenTitle}>My Bookings</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.segmentScroll}
-        >
-          <View style={styles.segmentContainer}>
+        <View style={styles.segmentScroll}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.segmentContainer}
+          >
             {["Pending", "Complete", "On-Going", "Cancelled"].map((item) => (
               <TouchableOpacity
                 key={item}
@@ -192,8 +192,8 @@ const MotorcycleBookScreen = () => {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </View>
       </View>
 
       {loading ? (
@@ -316,15 +316,16 @@ const styles = StyleSheet.create({
   segmentScroll: {
     position: "absolute",
     top: 50,
+    left: 0,
+    right: 0,
     zIndex: 999,
-    maxHeight: 40,
+    height: 40,
   },
 
   segmentContainer: {
-    flexDirection: "row",
     paddingHorizontal: 10,
-    alignItems: "center",
   },
+
   segmentButton: {
     paddingVertical: 6,
     paddingHorizontal: 16,
@@ -354,7 +355,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     marginTop: 50,
-    paddingHorizontal: 15,
     paddingBottom: 100,
   },
   bookingCard: {

@@ -9,7 +9,7 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
 import { useFocusEffect } from "@react-navigation/native";
@@ -210,7 +210,7 @@ export default function InquireScreen({ route, navigation }) {
                   try {
                     const bookingRef = doc(db, "bookings", booking.id);
                     await updateDoc(bookingRef, {
-                      bookingStatus: "Cancel",
+                      bookingStatus: "Cancelled",
                     });
                     navigation.navigate("HomeTabs", { screen: "Home" });
                   } catch (error) {

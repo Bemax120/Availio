@@ -70,7 +70,17 @@ const buildFavoriteVehicle = async (vehicleId) => {
   }
 };
 
-const MotorcycleFavoritesScreen = () => {
+const MotorcycleFavoritesScreen = ({ route }) => {
+  const filters = route?.params?.filters || {};
+  const locationFilter = filters.locationFilter;
+  const vehicleFilter = filters.vehicleType;
+
+  const startDate = filters.startDate;
+  const endDate = filters.endDate;
+  const pickUpTime = filters.pickUpTime;
+  const returnTime = filters.returnTime;
+  const methodType = filters.methodType;
+
   const navigation = useNavigation();
   const user = getAuth().currentUser;
 
@@ -142,7 +152,14 @@ const MotorcycleFavoritesScreen = () => {
               key={item.id}
               style={styles.card}
               onPress={() =>
-                navigation.navigate("MotorcycleDetail", { motorcycle: item })
+                navigation.navigate("VehicleDetail", {
+                  motorcycle: item,
+                  startDate,
+                  endDate,
+                  pickUpTime,
+                  returnTime,
+                  methodType,
+                })
               }
             >
               {item.defaultImg ? (
@@ -165,7 +182,7 @@ const MotorcycleFavoritesScreen = () => {
                 <View style={styles.infoRow}>
                   <Ionicons name="location" size={16} color="#666" />
                   <Text style={styles.locationText}>
-                    {item.businessAddress?.description || "Unknown Location"}
+                    {item.businessAddress || "Unknown Location"}
                   </Text>
                 </View>
 
@@ -199,11 +216,15 @@ export default MotorcycleFavoritesScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
     paddingTop: 60,
     backgroundColor: "#FCFBF4",
   },
-  screenTitle: { fontSize: 24, fontWeight: "bold", marginBottom: 16 },
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
   scrollContainer: { paddingBottom: 20 },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyText: {
