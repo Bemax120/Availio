@@ -17,7 +17,7 @@ import { getAuth } from "firebase/auth";
 const { width } = Dimensions.get("window");
 
 export default function ConfirmBooking({ route, navigation }) {
-  const { motorcycle, startDate, endDate, pickUpTime, returnTime } =
+  const { motorcycle, startDate, endDate, pickUpTime, returnTime, methodType } =
     route.params;
   const auth = getAuth();
 
@@ -130,6 +130,7 @@ export default function ConfirmBooking({ route, navigation }) {
         <Text>
           To: {formattedEnd} at {returnTime}
         </Text>
+        <Text>Method Type: {methodType}</Text>
         <Text>Total: ₱{totalPrice}</Text>
 
         <TouchableOpacity style={styles.button} onPress={handleConfirmBooking}>

@@ -135,10 +135,6 @@ export default function InquireScreen({ route, navigation }) {
   return (
     <ScrollView style={{ paddingTop: 60, backgroundColor: "#FCFBF4" }}>
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Booked</Text>
-        </View>
-
         <View style={styles.container}>
           <View style={styles.card}>
             <Image
@@ -261,7 +257,7 @@ export default function InquireScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "red",
+    paddingBottom: 60,
   },
   vehicleImage: {
     width: "100%",
@@ -362,7 +358,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     padding: 16,
   },
   card: {

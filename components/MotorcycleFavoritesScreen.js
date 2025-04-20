@@ -16,6 +16,7 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
   onSnapshot,
   deleteDoc,
@@ -24,103 +25,116 @@ import Toast from "react-native-toast-message";
 
 const db = getFirestore();
 
+const getAverageRating = async (ref) => {
+  const snap = await getDocs(ref);
+  const ratings = snap.docs.map((d) => d.data().rating).filter(Boolean);
+  const total = ratings.reduce((sum, r) => sum + r, 0);
+  return ratings.length ? total / ratings.length : 0;
+};
+
+const buildFavoriteVehicle = async (vehicleId) => {
+  try {
+    const vehicleRef = doc(db, "vehicles", vehicleId);
+    const vehicleSnap = await getDoc(vehicleRef);
+    if (!vehicleSnap.exists()) return null;
+
+    const vehicleData = vehicleSnap.data();
+    const supplierRef = doc(db, "users", vehicleData.ownerId);
+    const supplierSnap = await getDoc(supplierRef);
+    const supplierData = supplierSnap.exists() ? supplierSnap.data() : {};
+
+    const supplierRating = await getAverageRating(
+      collection(db, "users", vehicleData.ownerId, "supplierRatings")
+    );
+
+    const vehicleRating = await getAverageRating(
+      collection(db, "vehicles", vehicleId, "ratings")
+    );
+
+    return {
+      id: vehicleId,
+      ...vehicleData,
+      businessProfile: supplierData.businessProfile || null,
+      businessVerified: supplierData.businessVerified || false,
+      businessName: supplierData.businessName || "Unknown",
+      businessEmail: supplierData.businessEmail || "Unknown",
+      contactNumber: supplierData.contactNumber || "Unknown",
+      businessAddress: supplierData.businessAddress || null,
+      supplierRating,
+      vehicleRating,
+      isFavorite: true,
+    };
+  } catch (err) {
+    console.warn("Error building favorite vehicle:", err);
+    return null;
+  }
+};
+
 const MotorcycleFavoritesScreen = () => {
   const navigation = useNavigation();
-  const auth = getAuth();
-  const user = auth.currentUser;
+  const user = getAuth().currentUser;
 
   const [favoriteVehicles, setFavoriteVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchFavorites = useCallback(() => {
+  const loadFavorites = useCallback(() => {
     if (!user) return;
 
     const favRef = collection(db, "users", user.uid, "myFavorites");
-
     const unsubscribe = onSnapshot(favRef, async (snapshot) => {
-      const favoritePromises = snapshot.docs.map(async (docSnap) => {
-        const data = docSnap.data();
-        const vehicleRef = doc(db, "vehicles", data.vehicleId);
-        const vehicleSnap = await getDoc(vehicleRef);
-
-        return vehicleSnap.exists()
-          ? { id: vehicleSnap.id, ...vehicleSnap.data() }
-          : null;
-      });
-
-      const favoriteList = (await Promise.all(favoritePromises)).filter(
-        Boolean
-      );
-      setFavoriteVehicles(favoriteList);
+      const vehicleIds = snapshot.docs.map((doc) => doc.data().vehicleId);
+      const vehicles = await Promise.all(vehicleIds.map(buildFavoriteVehicle));
+      setFavoriteVehicles(vehicles.filter(Boolean));
       setLoading(false);
     });
 
     return unsubscribe;
   }, [user]);
 
-  // Run once when user is authenticated
   useEffect(() => {
     if (!user) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Login" }],
-      });
-    } else {
-      fetchFavorites();
+      navigation.reset({ index: 0, routes: [{ name: "Login" }] });
     }
   }, [user]);
 
-  // Refetch on screen focus
-  useFocusEffect(
-    useCallback(() => {
-      const unsubscribe = fetchFavorites();
-      return () => unsubscribe && unsubscribe();
-    }, [fetchFavorites])
-  );
+  useFocusEffect(loadFavorites);
 
   const handleRemove = async (vehicleId) => {
     try {
       const favRef = doc(db, "users", user.uid, "myFavorites", vehicleId);
       await deleteDoc(favRef);
-      Toast.show({
-        type: "success",
-        text1: "Removed from favorites",
-      });
+      Toast.show({ type: "success", text1: "Removed from favorites" });
     } catch (error) {
       console.error("Error removing favorite:", error);
-      Toast.show({
-        type: "error",
-        text1: "Error removing from favorites",
-      });
+      Toast.show({ type: "error", text1: "Error removing from favorites" });
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchFavorites();
+    const favRef = collection(db, "users", user.uid, "myFavorites");
+    const snapshot = await getDocs(favRef);
+    const vehicleIds = snapshot.docs.map((doc) => doc.data().vehicleId);
+    const vehicles = await Promise.all(vehicleIds.map(buildFavoriteVehicle));
+    setFavoriteVehicles(vehicles.filter(Boolean));
     setRefreshing(false);
   };
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="tomato" />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.screenTitle}>Favorites</Text>
-
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {favoriteVehicles.length === 0 ? (
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="tomato" />
+          </View>
+        ) : favoriteVehicles.length === 0 ? (
           <Text style={styles.emptyText}>Nothing Here Yet</Text>
         ) : (
           favoriteVehicles.map((item) => (
@@ -131,9 +145,9 @@ const MotorcycleFavoritesScreen = () => {
                 navigation.navigate("MotorcycleDetail", { motorcycle: item })
               }
             >
-              {item.image ? (
+              {item.defaultImg ? (
                 <Image
-                  source={{ uri: item.image }}
+                  source={{ uri: item.defaultImg }}
                   style={styles.imagePlaceholder}
                 />
               ) : (
@@ -156,11 +170,11 @@ const MotorcycleFavoritesScreen = () => {
                 </View>
 
                 <View style={styles.priceRow}>
-                  <Text style={styles.priceText}>₱{item.price}/day</Text>
+                  <Text style={styles.priceText}>₱{item.pricePerDay}/day</Text>
                   <View style={styles.ratingBadge}>
                     <Ionicons name="star" size={14} color="white" />
                     <Text style={styles.ratingText}>
-                      {item.rating?.toFixed(1) || 0}
+                      {item.vehicleRating?.toFixed(1) || 0}
                     </Text>
                   </View>
                 </View>
@@ -206,7 +220,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   imagePlaceholder: {
-    height: 150,
+    height: 250,
     borderRadius: 8,
     backgroundColor: "#f2f2f2",
     justifyContent: "center",
@@ -223,7 +237,7 @@ const styles = StyleSheet.create({
   },
   bikeName: { fontSize: 18, fontWeight: "bold" },
   infoRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
-  locationText: { marginLeft: 4, color: "#666" },
+  locationText: { marginLeft: 4, color: "#666", maxWidth: "90%" },
   priceRow: {
     flexDirection: "row",
     justifyContent: "space-between",

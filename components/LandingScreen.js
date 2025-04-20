@@ -21,6 +21,41 @@ const LandingScreen = () => {
         />
       </View>
 
+      <TouchableOpacity
+        style={{
+          flex: 1,
+          maxHeight: 85,
+          marginHorizontal: 20,
+
+          backgroundColor: "#E4A0F7",
+          borderRadius: 15,
+          position: "relative",
+        }}
+        onPress={() =>
+          navigation.navigate("Filter", {
+            vehicleType: "",
+          })
+        }
+      >
+        <MaterialIcons
+          style={{ position: "absolute", bottom: 5, right: 10 }}
+          size={60}
+          color="#702963"
+          name="two-wheeler"
+        />
+        <Ionicons
+          style={{ position: "absolute", bottom: 5, right: 65 }}
+          size={60}
+          color="#702963"
+          name="car-sport"
+        />
+        <Text
+          style={{ padding: 10, fontSize: 16, fontFamily: "Inter-Semibold" }}
+        >
+          All Vehicles
+        </Text>
+      </TouchableOpacity>
+
       <View
         style={{
           flexDirection: "row",

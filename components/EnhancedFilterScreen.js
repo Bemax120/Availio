@@ -27,8 +27,10 @@ const EnhancedFilterScreen = () => {
   const endDate = route.params?.endDate;
   const pickUpTime = route.params?.pickUpTime;
   const returnTime = route.params?.returnTime;
+  const method = route.params?.method;
 
   const [sortOrder, setSortOrder] = useState("none");
+  const [methodType, setMethodType] = useState("none");
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
@@ -52,9 +54,14 @@ const EnhancedFilterScreen = () => {
       endDate,
       pickUpTime,
       returnTime,
+      methodType,
     };
     if (!startDate || !endDate || !pickUpTime || !returnTime) {
       Alert.alert("No Booking Date", "Please Select A Booking Date!");
+      return;
+    }
+    if (!methodType) {
+      Alert.alert("No Method Type", "Please Select A Method Type!");
       return;
     }
     navigation.replace("HomeTabs", { filters });
@@ -66,9 +73,12 @@ const EnhancedFilterScreen = () => {
   if (vehicleType === "2 Wheels") {
     topGradient = "#ffa3a6";
     bottomGradient = "#ffeded";
-  } else {
+  } else if (vehicleType === "4 Wheels") {
     topGradient = "#6497b1";
     bottomGradient = "#b3cde0";
+  } else {
+    topGradient = "#E4A0F7";
+    bottomGradient = "#D7BFDC";
   }
 
   return (
@@ -97,14 +107,31 @@ const EnhancedFilterScreen = () => {
             name="two-wheeler"
             size={75}
             color="red"
-          />
+          /> ? (
+            vehicleType === "4 Wheels"
+          ) : (
+            <Ionicons
+              style={{ position: "absolute", bottom: 30, right: 25 }}
+              name="car-sport"
+              size={75}
+              color="blue"
+            />
+          )
         ) : (
-          <Ionicons
-            style={{ position: "absolute", bottom: 30, right: 25 }}
-            name="car-sport"
-            size={75}
-            color="blue"
-          />
+          <>
+            <MaterialIcons
+              style={{ position: "absolute", bottom: 30, right: 25 }}
+              name="two-wheeler"
+              size={75}
+              color="#702963"
+            />
+            <Ionicons
+              style={{ position: "absolute", bottom: 30, right: 100 }}
+              name="car-sport"
+              size={75}
+              color="#702963"
+            />
+          </>
         )}
       </LinearGradient>
 
@@ -209,8 +236,33 @@ const EnhancedFilterScreen = () => {
               { label: "Farthest First", value: "farthest" },
             ]}
             useNativeAndroidPickerStyle={false}
-            style={{ pickerStyles }}
-            placeholder={{ label: "Select sorting", value: null }}
+            style={pickerStyles}
+            placeholder={{ label: "Select Distance", value: null }}
+          />
+        </View>
+
+        <View
+          style={{
+            flexDirection: "row",
+            backgroundColor: "#ECECEC",
+            paddingVertical: 4,
+            paddingHorizontal: 16,
+            borderRadius: 100,
+            gap: 5,
+            marginBottom: 20,
+            alignItems: "center",
+          }}
+        >
+          <RNPickerSelect
+            onValueChange={(value) => setMethodType(value)}
+            value={methodType}
+            items={[
+              { label: "Delivery", value: "Delivery" },
+              { label: "Pickup", value: "Pickup" },
+            ]}
+            useNativeAndroidPickerStyle={false}
+            style={pickerStyles}
+            placeholder={{ label: "Method", value: "Delivery" }}
           />
         </View>
 
@@ -219,7 +271,7 @@ const EnhancedFilterScreen = () => {
         >
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate("MapPinScreen", {
+              navigation.navigate("MapBusinessScreen", {
                 vehicleType,
                 locationAddress,
                 startDate,
@@ -347,6 +399,6 @@ const pickerStyles = {
     color: "black",
   },
   placeholder: {
-    color: "#888",
+    color: "#000000",
   },
 };
