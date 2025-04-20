@@ -19,10 +19,14 @@ import {
   doc,
   getDoc,
   getDocs,
+  setDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import RNPickerSelect from "react-native-picker-select";
+import { getAuth } from "firebase/auth";
+import Toast from "react-native-toast-message";
 
 const calculateDistance = (loc1, loc2) => {
   const toRad = (value) => (value * Math.PI) / 180;
@@ -132,7 +136,10 @@ const DashboardScreen = ({ route }) => {
 
   // Function to fetch scooters from Firestore
   const fetchScooters = useCallback(() => {
-    setIsLoading(true); // start loading here
+    const auth = getAuth();
+    const userId = auth.currentUser?.uid;
+
+    setIsLoading(true);
     const scootersRef = collection(db, "vehicles");
 
     const unsubscribe = onSnapshot(scootersRef, async (snapshot) => {
@@ -146,6 +153,8 @@ const DashboardScreen = ({ route }) => {
 
         let vehicleAverageRating = null;
         let vehicleRatingCount = null;
+
+        let isFavorite = false;
 
         try {
           // Fetch supplier
@@ -173,6 +182,18 @@ const DashboardScreen = ({ route }) => {
               supplierAverageRating = total / supplierRatings.length;
               supplierRatingCount = supplierRatings.length;
             }
+          }
+
+          if (userId) {
+            const favoriteRef = doc(
+              db,
+              "users",
+              userId,
+              "myFavorites",
+              scooterId
+            );
+            const favoriteSnap = await getDoc(favoriteRef);
+            isFavorite = favoriteSnap.exists();
           }
 
           // Fetch vehicle ratings
@@ -219,6 +240,7 @@ const DashboardScreen = ({ route }) => {
           vehicleRating: vehicleAverageRating || 0,
           vehicleRatingCount: vehicleRatingCount || 0,
           distance: distance ?? null,
+          isFavorite,
         };
       });
 
@@ -231,6 +253,53 @@ const DashboardScreen = ({ route }) => {
 
     return unsubscribe;
   }, []);
+
+  const toggleFavorite = async (vehicleId) => {
+    const auth = getAuth();
+    const userId = auth.currentUser?.uid;
+
+    if (!userId) return;
+
+    const favoriteRef = doc(db, "users", userId, "myFavorites", vehicleId);
+
+    try {
+      const favoriteSnap = await getDoc(favoriteRef);
+
+      if (favoriteSnap.exists()) {
+        await deleteDoc(favoriteRef);
+        Toast.show({
+          type: "success",
+          text1: "Removed from Favorites",
+          visibilityTime: 1500,
+        });
+      } else {
+        await setDoc(favoriteRef, {
+          vehicleId,
+          createdAt: new Date(),
+        });
+        Toast.show({
+          type: "success",
+          text1: "Added to Favorites",
+          visibilityTime: 1500,
+        });
+      }
+
+      setScooters((prev) =>
+        prev.map((scooter) =>
+          scooter.id === vehicleId
+            ? { ...scooter, isFavorite: !scooter.isFavorite }
+            : scooter
+        )
+      );
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Could not update favorites.",
+      });
+    }
+  };
 
   // Fetch scooters when the screen is focused
   useFocusEffect(
@@ -317,7 +386,7 @@ const DashboardScreen = ({ route }) => {
   };
 
   return (
-    <View style={{ flex: 1, marginTop: 60, backgroundColor: "#FCFBF4" }}>
+    <View style={{ flex: 1, paddingTop: 60, backgroundColor: "#FCFBF4" }}>
       <TouchableOpacity
         onPress={() => navigation.navigate("MapPinScreen")}
         style={styles.mapIcon}
@@ -360,31 +429,7 @@ const DashboardScreen = ({ route }) => {
                 { label: "300cc - 500cc", value: "300-500" },
                 { label: "500cc - 1000cc", value: "500-1000" },
               ]}
-              style={{
-                inputIOS: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                inputAndroid: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                placeholder: {
-                  color: "#000000",
-                },
-              }}
+              style={pickerStyle}
               useNativeAndroidPickerStyle={false}
               placeholder={{ label: "Select Displacement", value: null }}
             />
@@ -400,31 +445,7 @@ const DashboardScreen = ({ route }) => {
                 { label: "₱1000 - ₱1500", value: "1000-1500" },
                 { label: "Greater Than ₱1500", value: "1500-999999999" },
               ]}
-              style={{
-                inputIOS: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                inputAndroid: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                placeholder: {
-                  color: "#000000",
-                },
-              }}
+              style={pickerStyle}
               useNativeAndroidPickerStyle={false}
               placeholder={{ label: "Select Price Range", value: null }}
             />
@@ -439,31 +460,7 @@ const DashboardScreen = ({ route }) => {
                 { label: "★★★★", value: "3-4" },
                 { label: "★★★★★", value: "4-5" },
               ]}
-              style={{
-                inputIOS: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                inputAndroid: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                placeholder: {
-                  color: "#000000",
-                },
-              }}
+              style={pickerStyle}
               useNativeAndroidPickerStyle={false}
               placeholder={{ label: "Select Vehicle Rating", value: null }}
             />
@@ -478,31 +475,7 @@ const DashboardScreen = ({ route }) => {
                 { label: "★★★★", value: "3-4" },
                 { label: "★★★★★", value: "4-5" },
               ]}
-              style={{
-                inputIOS: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                inputAndroid: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                placeholder: {
-                  color: "#000000",
-                },
-              }}
+              style={pickerStyle}
               useNativeAndroidPickerStyle={false}
               placeholder={{ label: "Select Business Rating", value: null }}
             />
@@ -523,14 +496,39 @@ const DashboardScreen = ({ route }) => {
                 paddingVertical: 50,
               }}
             >
-              <ActivityIndicator size="large" color="#4a5565" />
+              <ActivityIndicator size="large" color="red" />
             </View>
           ) : scooters.length > 0 ? (
             scooters.map((scooter) => (
               <View
-                style={{ width: "100%", backgroundColor: "#ffffff" }}
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  backgroundColor: "#FFFFFF",
+                }}
                 key={scooter.id}
               >
+                <TouchableOpacity
+                  style={{
+                    zIndex: 999,
+                    position: "absolute",
+                    right: 10,
+                    top: 10,
+                    backgroundColor: "#FCFBF4",
+                    padding: 2,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 100,
+                  }}
+                  onPress={() => toggleFavorite(scooter.id)}
+                >
+                  <Ionicons
+                    name={scooter.isFavorite ? "heart" : "heart-outline"}
+                    size={30}
+                    color="#FF3B30"
+                  />
+                </TouchableOpacity>
+
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {scooter.images.map((imgUrl, index) => (
                     <Image
@@ -553,6 +551,15 @@ const DashboardScreen = ({ route }) => {
                   }
                 >
                   <View style={styles.floatingBox}>
+                    <View
+                      style={{
+                        height: 15,
+                        width: "100%",
+                        backgroundColor: "#EF0000",
+                        borderTopStartRadius: 10,
+                        borderTopEndRadius: 10,
+                      }}
+                    ></View>
                     <Text style={styles.floatingText}>
                       ₱{scooter.pricePerDay}/day
                     </Text>
@@ -627,12 +634,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 20,
     right: 20,
-    zIndex: 10, // Make sure it's above everything
+    zIndex: 10,
     backgroundColor: "#fff",
     borderRadius: 50,
     padding: 10,
-    elevation: 5, // For Android
-    shadowColor: "#000", // For iOS
+    elevation: 5,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
@@ -766,7 +773,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     alignItems: "flex-end",
     backgroundColor: "#FFFFFF",
-    padding: 10,
     borderRadius: 5,
     zIndex: 10,
     color: "red",
@@ -774,9 +780,11 @@ const styles = StyleSheet.create({
   },
 
   floatingText: {
+    padding: 10,
     font: "bold",
     color: "#EF0000",
     fontSize: 16,
+    fontFamily: "Inter-Semibold",
   },
 
   scooterImage: {
@@ -812,5 +820,31 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 });
+
+const pickerStyle = {
+  inputIOS: {
+    width: "auto",
+    height: "auto",
+    textAlign: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    color: "black",
+    borderRadius: 100,
+  },
+  inputAndroid: {
+    width: "auto",
+    height: "auto",
+    textAlign: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    color: "black",
+    borderRadius: 100,
+  },
+  placeholder: {
+    color: "#000000",
+  },
+};
 
 export default DashboardScreen;

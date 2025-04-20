@@ -93,7 +93,7 @@ const LoginScreen = ({ navigation }) => {
         await AsyncStorage.setItem("userData", JSON.stringify(finalUserData));
 
         Alert.alert("Success", `Welcome, ${finalUserData.firstName}!`);
-        navigation.replace("Filter");
+        navigation.replace("Landing");
       } else {
         throw new Error("User data not found in Firestore");
       }
@@ -180,7 +180,7 @@ const LoginScreen = ({ navigation }) => {
         </Text>
       </Text>
       <Text
-        onPress={() => navigation.navigate("Filter")}
+        onPress={() => navigation.navigate("Landing")}
         style={styles.registerText}
       >
         Continue as Guest
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#FCFBF4",
   },
   title: {
     fontSize: 18,

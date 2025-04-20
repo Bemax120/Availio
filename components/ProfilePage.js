@@ -68,7 +68,7 @@ const ProfilePage = () => {
     try {
       await AsyncStorage.removeItem("userData");
       await signOut(auth);
-      navigation.replace("Filter");
+      navigation.replace("Landing");
     } catch (error) {
       console.error("❌ Logout Error:", error);
       Alert.alert("Error", "Failed to log out. Please try again.");
@@ -124,7 +124,7 @@ const ProfilePage = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F5F5" },
+  container: { paddingTop: 60, flex: 1, backgroundColor: "#F5F5F5" },
   loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   errorText: { textAlign: "center", marginTop: 20, fontSize: 16, color: "red" },
   profileHeader: {

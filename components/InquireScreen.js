@@ -133,7 +133,7 @@ export default function InquireScreen({ route, navigation }) {
   }
 
   return (
-    <ScrollView style={{ marginTop: 60, backgroundColor: "#FCFBF4" }}>
+    <ScrollView style={{ paddingTop: 60, backgroundColor: "#FCFBF4" }}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Booked</Text>

@@ -25,6 +25,7 @@ import VehicleDetailScreen from "./components/VehicleDetailScreen";
 import LandingScreen from "./components/LandingScreen";
 import { useFonts } from "expo-font";
 import "react-native-get-random-values";
+import Toast from "react-native-toast-message";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -58,9 +59,21 @@ function HomeTabs({ route }) {
         initialParams={{ filters }}
         component={DashboardScreen}
       />
-      <Tab.Screen name="Favorite" component={MotorcycleFavoritesScreen} />
-      <Tab.Screen name="Book" component={MotorcycleBookScreen} />
-      <Tab.Screen name="Account" component={ProfilePage} />
+      <Tab.Screen
+        options={{ headerShown: false }}
+        name="Favorite"
+        component={MotorcycleFavoritesScreen}
+      />
+      <Tab.Screen
+        options={{ headerShown: false }}
+        name="Book"
+        component={MotorcycleBookScreen}
+      />
+      <Tab.Screen
+        options={{ headerShown: false }}
+        name="Account"
+        component={ProfilePage}
+      />
     </Tab.Navigator>
   );
 }
@@ -152,6 +165,7 @@ const App = () => {
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
+      <Toast />
     </NavigationContainer>
   );
 };
