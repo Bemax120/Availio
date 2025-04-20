@@ -14,14 +14,17 @@ import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const MotorcycleBookScreen = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("Pending");
-  const navigation = useNavigation();
 
+  const navigation = useNavigation();
   const auth = getAuth();
+  const insets = useSafeAreaInsets();
+
   const userId = auth.currentUser?.uid;
 
   useEffect(() => {
@@ -158,49 +161,57 @@ const MotorcycleBookScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.screenTitle}>My Bookings</Text>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.segmentScroll}
-      >
-        <View style={styles.segmentContainer}>
-          {["Pending", "Complete", "On-Going", "Cancelled"].map((item) => (
-            <TouchableOpacity
-              key={item}
-              style={[
-                styles.segmentButton,
-                filter === item && styles.activeSegment,
-              ]}
-              onPress={() => {
-                setLoading(true);
-                setFilter(item);
-              }}
-            >
-              <Text
-                style={
-                  filter === item
-                    ? styles.activeSegmentText
-                    : styles.segmentText
-                }
+      <View style={{ backgroundColor: "#FCFBF4", zIndex: 999 }}>
+        <Text style={styles.screenTitle}>My Bookings</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.segmentScroll}
+        >
+          <View style={styles.segmentContainer}>
+            {["Pending", "Complete", "On-Going", "Cancelled"].map((item) => (
+              <TouchableOpacity
+                key={item}
+                style={[
+                  styles.segmentButton,
+                  filter === item && styles.activeSegment,
+                ]}
+                onPress={() => {
+                  setLoading(true);
+                  setFilter(item);
+                }}
               >
-                {item === "On-Going" ? "Pending" : item}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
+                <Text
+                  style={
+                    filter === item
+                      ? styles.activeSegmentText
+                      : styles.segmentText
+                  }
+                >
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
 
       {loading ? (
-        <View style={styles.loaderContainer}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="red" />
+        </View>
+      ) : !filteredBookings || filteredBookings.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Nothing Here Yet</Text>
         </View>
       ) : (
         <FlatList
           data={filteredBookings}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.scrollContainer}
+          contentContainerStyle={[
+            styles.scrollContainer,
+            { paddingBottom: 100 },
+          ]} // 👈 make sure to keep this
           renderItem={({ item }) => (
             <View style={styles.bookingCard}>
               <View style={styles.bookingHeader}>
@@ -232,7 +243,6 @@ const MotorcycleBookScreen = () => {
                 <TouchableOpacity
                   style={styles.secondaryButton}
                   onPress={() => {
-                    console.log(item.id, item.total, item);
                     navigation.navigate("Inquire", {
                       bookingId: item.id,
                       totalPrice: item.total,
@@ -278,54 +288,81 @@ const MotorcycleBookScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#FCFBF4" },
+  container: {
+    flex: 1,
+    paddingTop: 60,
+    flexDirection: "column",
+    backgroundColor: "#FCFBF4",
+    position: "relative",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 50,
+  },
+
+  emptyText: {
+    fontSize: 16,
+    color: "#aaa",
+  },
   screenTitle: {
     fontSize: 28,
     fontWeight: "800",
     color: "#333",
-    padding: 20,
+    paddingHorizontal: 20,
+    marginBottom: 10,
   },
   segmentScroll: {
-    marginVertical: 10,
+    position: "absolute",
+    top: 50,
+    zIndex: 999,
+    maxHeight: 40,
   },
 
   segmentContainer: {
     flexDirection: "row",
-    gap: 10,
     paddingHorizontal: 10,
-    height: 40,
+    alignItems: "center",
   },
-
   segmentButton: {
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 16,
     backgroundColor: "#eee",
     borderRadius: 20,
-    justifyContent: "center",
+    marginRight: 8,
     alignItems: "center",
-    height: 38,
+    justifyContent: "center",
   },
 
   activeSegment: {
     backgroundColor: "#EF0000",
   },
-
   segmentText: {
     color: "#333",
     fontSize: 14,
     fontWeight: "500",
   },
-
   activeSegmentText: {
     color: "#fff",
     fontWeight: "600",
   },
-  scrollContainer: { padding: 15 },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scrollContainer: {
+    marginTop: 50,
+    paddingHorizontal: 15,
+    paddingBottom: 100,
+  },
   bookingCard: {
     backgroundColor: "white",
     borderRadius: 15,
     marginBottom: 15,
     padding: 15,
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -336,37 +373,70 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 15,
   },
-  bikeInfo: { flexDirection: "row", alignItems: "center" },
-  bookingDate: { marginLeft: 8, color: "black", fontWeight: "600" },
-  statusBadge: { paddingVertical: 4, paddingHorizontal: 12, borderRadius: 15 },
-  statusText: { color: "white", fontWeight: "600", fontSize: 12 },
-  bookingContent: { flexDirection: "row", marginBottom: 15 },
-  bookingImage: { width: 100, height: 80, borderRadius: 10 },
+  bikeInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  bookingDate: {
+    marginLeft: 8,
+    color: "black",
+    fontWeight: "600",
+  },
+  bookingContent: {
+    flexDirection: "row",
+    marginBottom: 15,
+  },
+  bookingImage: {
+    width: 100,
+    height: 80,
+    borderRadius: 10,
+    backgroundColor: "#ccc",
+  },
   imagePlaceholder: {
     width: 100,
     height: 80,
-    backgroundColor: "black",
+    backgroundColor: "#999",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
   },
-  placeholderText: { color: "white", fontSize: 12 },
-  bookingDetails: { flex: 1, marginLeft: 15, justifyContent: "space-between" },
-  bikeName: { fontSize: 18, fontWeight: "700", color: "#333" },
-  totalText: { fontSize: 16, color: "#4CD964", fontWeight: "600" },
+  placeholderText: {
+    color: "white",
+    fontSize: 12,
+  },
+  bookingDetails: {
+    flex: 1,
+    marginLeft: 15,
+    justifyContent: "center",
+  },
+  bikeName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 4,
+  },
+  totalText: {
+    fontSize: 16,
+    color: "#4CD964",
+    fontWeight: "600",
+  },
+  statusText: { color: "white", fontWeight: "600", fontSize: 12 },
+  statusBadge: { paddingVertical: 4, paddingHorizontal: 12, borderRadius: 15 },
   actionButtons: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginTop: 10,
+    gap: 10,
   },
   primaryButton: {
     backgroundColor: "#FF3B30",
     paddingVertical: 8,
     paddingHorizontal: 20,
     borderRadius: 8,
-    marginLeft: 10,
   },
-  primaryButtonText: { color: "white", fontWeight: "600" },
+  primaryButtonText: {
+    color: "white",
+    fontWeight: "600",
+  },
   secondaryButton: {
     borderWidth: 1,
     borderColor: "black",
@@ -374,8 +444,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
   },
-  secondaryButtonText: { color: "#4b6584", fontWeight: "600" },
-  loaderContainer: { justifyContent: "center", alignItems: "center" },
+  secondaryButtonText: {
+    color: "#4b6584",
+    fontWeight: "600",
+  },
 });
 
 export default MotorcycleBookScreen;

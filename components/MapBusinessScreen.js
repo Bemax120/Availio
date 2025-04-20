@@ -18,7 +18,7 @@ import { db } from "../firebase/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
 const screen = Dimensions.get("window");
 
-const MapPinScreen = () => {
+const MapBusinessScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
 
@@ -75,6 +75,24 @@ const MapPinScreen = () => {
     })();
   }, []);
 
+  useEffect(() => {
+    const fetchUsersWithLocations = async () => {
+      const usersSnap = await getDocs(collection(db, "users"));
+      const usersWithLocation = usersSnap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter(
+          (user) =>
+            user.businessCoordinates &&
+            user.businessProfile &&
+            user.businessAddress
+        );
+
+      setUserMarkers(usersWithLocation);
+    };
+
+    fetchUsersWithLocations();
+  }, []);
+
   const handleManualSearch = async () => {
     if (!searchText.trim()) return;
 
@@ -85,7 +103,7 @@ const MapPinScreen = () => {
         )}&format=json&limit=1`,
         {
           headers: {
-            "User-Agent": "Availio/1.0 (kennethrex456@gmail.com)", // Replace with your app/email
+            "User-Agent": "Availio/1.0 (kennethrex456@gmail.com)",
             "Accept-Language": "en",
           },
         }
@@ -167,6 +185,22 @@ const MapPinScreen = () => {
     <View style={{ flex: 1 }}>
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("HomeTabs", {
+                locationFilter: centerLocation,
+                locationAddress: address,
+                vehicleType,
+                startDate,
+                endDate,
+                pickUpTime,
+                returnTime,
+              })
+            }
+          >
+            <Ionicons name="arrow-back" size={30} color="black" />
+          </TouchableOpacity>
+
           <TextInput
             placeholder="Search for a location"
             value={searchText}
@@ -182,7 +216,55 @@ const MapPinScreen = () => {
           style={{ flex: 1 }}
           initialRegion={location}
           onRegionChangeComplete={handleRegionChangeComplete}
-        ></MapView>
+        >
+          {userMarkers.map((user) => (
+            <Marker
+              key={user.id}
+              coordinate={{
+                latitude: user.businessCoordinates.latitude,
+                longitude: user.businessCoordinates.longitude,
+              }}
+              title={user.businessAddress}
+            >
+              <View
+                style={{
+                  backgroundColor: "#fff",
+                  padding: 4,
+                  borderRadius: 35,
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  elevation: 5,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 3,
+                }}
+              >
+                <Image
+                  source={{ uri: user.businessProfile }}
+                  style={{
+                    width: 25,
+                    height: 25,
+                    borderRadius: 50,
+                  }}
+                />
+              </View>
+              <Callout tooltip>
+                <View
+                  style={{
+                    backgroundColor: "white",
+                    padding: 10,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ fontWeight: "bold", maxWidth: 200 }}>
+                    {user.businessAddress}
+                  </Text>
+                </View>
+              </Callout>
+            </Marker>
+          ))}
+        </MapView>
       )}
 
       <View style={styles.markerFixed}>
@@ -279,4 +361,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MapPinScreen;
+export default MapBusinessScreen;

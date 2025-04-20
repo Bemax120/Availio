@@ -73,7 +73,7 @@ export default function DateTimePickerScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Set Date & Time</Text>
+      <Text style={styles.title}>Set Booking Time</Text>
       <Calendar
         onDayPress={onDayPress}
         markedDates={selectedDates}
@@ -121,13 +121,15 @@ export default function DateTimePickerScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    paddingTop: 40,
+    paddingTop: 60,
+    paddingHorizontal: 12,
+    backgroundColor: "#FCFBF4",
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 20,
+    textAlign: "center",
   },
   pickerContainer: {
     marginTop: 20,

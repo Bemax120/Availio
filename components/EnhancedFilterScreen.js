@@ -87,7 +87,7 @@ const EnhancedFilterScreen = () => {
           onPress={() => navigation.navigate("Landing")}
         >
           <Ionicons name="arrow-back" size={30} color="black" />
-          <Text style={{ fontSize: 20, fontFamily: "Inter-Regular" }}>
+          <Text style={{ fontSize: 20, fontFamily: "Inter-Semibold" }}>
             All {vehicleType}
           </Text>
         </TouchableOpacity>
@@ -209,25 +209,7 @@ const EnhancedFilterScreen = () => {
               { label: "Farthest First", value: "farthest" },
             ]}
             useNativeAndroidPickerStyle={false}
-            style={{
-              inputIOS: {
-                width: "auto",
-                height: "auto",
-                paddingVertical: 8,
-                paddingHorizontal: 12,
-                color: "black",
-              },
-              inputAndroid: {
-                width: "auto",
-                height: "auto",
-                paddingVertical: 8,
-                paddingHorizontal: 12,
-                color: "black",
-              },
-              placeholder: {
-                color: "#888",
-              },
-            }}
+            style={{ pickerStyles }}
             placeholder={{ label: "Select sorting", value: null }}
           />
         </View>
@@ -351,25 +333,20 @@ const styles = StyleSheet.create({
 
 const pickerStyles = {
   inputIOS: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: "red",
-    borderRadius: 8,
-    color: "red",
-    paddingRight: 30,
-    backgroundColor: "#fff",
+    width: "auto",
+    height: "auto",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    color: "black",
   },
   inputAndroid: {
-    fontSize: 16,
-    paddingHorizontal: 10,
+    width: "auto",
+    height: "auto",
     paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "red",
-    borderRadius: 8,
-    color: "red",
-    paddingRight: 30,
-    backgroundColor: "#fff",
+    paddingHorizontal: 12,
+    color: "black",
+  },
+  placeholder: {
+    color: "#888",
   },
 };

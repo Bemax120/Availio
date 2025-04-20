@@ -122,7 +122,7 @@ export default function ChatScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "red",
+    backgroundColor: "#FCFBF4",
   },
   header: {
     flexDirection: "row",

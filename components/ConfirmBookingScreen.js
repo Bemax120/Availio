@@ -150,7 +150,7 @@ export default function ConfirmBooking({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, marginTop: 60, backgroundColor: "#FCFBF4" },
+  container: { flex: 1, paddingTop: 60, backgroundColor: "#FCFBF4" },
   imageCarousel: {
     backgroundColor: "#eee",
   },

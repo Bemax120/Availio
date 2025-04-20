@@ -19,10 +19,14 @@ import {
   doc,
   getDoc,
   getDocs,
+  setDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import RNPickerSelect from "react-native-picker-select";
+import { getAuth } from "firebase/auth";
+import Toast from "react-native-toast-message";
 
 const calculateDistance = (loc1, loc2) => {
   const toRad = (value) => (value * Math.PI) / 180;
@@ -132,7 +136,10 @@ const DashboardScreen = ({ route }) => {
 
   // Function to fetch scooters from Firestore
   const fetchScooters = useCallback(() => {
-    setIsLoading(true); // start loading here
+    const auth = getAuth();
+    const userId = auth.currentUser?.uid;
+
+    setIsLoading(true);
     const scootersRef = collection(db, "vehicles");
 
     const unsubscribe = onSnapshot(scootersRef, async (snapshot) => {
@@ -146,6 +153,8 @@ const DashboardScreen = ({ route }) => {
 
         let vehicleAverageRating = null;
         let vehicleRatingCount = null;
+
+        let isFavorite = false;
 
         try {
           // Fetch supplier
@@ -173,6 +182,18 @@ const DashboardScreen = ({ route }) => {
               supplierAverageRating = total / supplierRatings.length;
               supplierRatingCount = supplierRatings.length;
             }
+          }
+
+          if (userId) {
+            const favoriteRef = doc(
+              db,
+              "users",
+              userId,
+              "myFavorites",
+              scooterId
+            );
+            const favoriteSnap = await getDoc(favoriteRef);
+            isFavorite = favoriteSnap.exists();
           }
 
           // Fetch vehicle ratings
@@ -219,6 +240,7 @@ const DashboardScreen = ({ route }) => {
           vehicleRating: vehicleAverageRating || 0,
           vehicleRatingCount: vehicleRatingCount || 0,
           distance: distance ?? null,
+          isFavorite,
         };
       });
 
@@ -231,6 +253,53 @@ const DashboardScreen = ({ route }) => {
 
     return unsubscribe;
   }, []);
+
+  const toggleFavorite = async (vehicleId) => {
+    const auth = getAuth();
+    const userId = auth.currentUser?.uid;
+
+    if (!userId) return;
+
+    const favoriteRef = doc(db, "users", userId, "myFavorites", vehicleId);
+
+    try {
+      const favoriteSnap = await getDoc(favoriteRef);
+
+      if (favoriteSnap.exists()) {
+        await deleteDoc(favoriteRef);
+        Toast.show({
+          type: "success",
+          text1: "Removed from Favorites",
+          visibilityTime: 1500,
+        });
+      } else {
+        await setDoc(favoriteRef, {
+          vehicleId,
+          createdAt: new Date(),
+        });
+        Toast.show({
+          type: "success",
+          text1: "Added to Favorites",
+          visibilityTime: 1500,
+        });
+      }
+
+      setScooters((prev) =>
+        prev.map((scooter) =>
+          scooter.id === vehicleId
+            ? { ...scooter, isFavorite: !scooter.isFavorite }
+            : scooter
+        )
+      );
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Could not update favorites.",
+      });
+    }
+  };
 
   // Fetch scooters when the screen is focused
   useFocusEffect(
@@ -317,7 +386,7 @@ const DashboardScreen = ({ route }) => {
   };
 
   return (
-    <View style={{ flex: 1, marginTop: 60, backgroundColor: "#FCFBF4" }}>
+    <View style={{ flex: 1, paddingTop: 60, backgroundColor: "#FCFBF4" }}>
       <TouchableOpacity
         onPress={() => navigation.navigate("MapPinScreen")}
         style={styles.mapIcon}
@@ -360,31 +429,7 @@ const DashboardScreen = ({ route }) => {
                 { label: "300cc - 500cc", value: "300-500" },
                 { label: "500cc - 1000cc", value: "500-1000" },
               ]}
-              style={{
-                inputIOS: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                inputAndroid: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                placeholder: {
-                  color: "#000000",
-                },
-              }}
+              style={pickerStyle}
               useNativeAndroidPickerStyle={false}
               placeholder={{ label: "Select Displacement", value: null }}
             />
@@ -393,38 +438,14 @@ const DashboardScreen = ({ route }) => {
               onValueChange={(value) => setPriceFilter(value)}
               value={priceFilter}
               items={[
-                { label: "Less Than ₱300", value: "300" },
+                { label: "Less Than ₱300", value: "0-300" },
                 { label: "₱300 - ₱500", value: "300-500" },
                 { label: "₱500 - ₱700", value: "500-700" },
                 { label: "₱700 - ₱1000", value: "700-1000" },
                 { label: "₱1000 - ₱1500", value: "1000-1500" },
-                { label: "Greater Than ₱1500", value: "1500" },
+                { label: "Greater Than ₱1500", value: "1500-999999999" },
               ]}
-              style={{
-                inputIOS: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                inputAndroid: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                placeholder: {
-                  color: "#000000",
-                },
-              }}
+              style={pickerStyle}
               useNativeAndroidPickerStyle={false}
               placeholder={{ label: "Select Price Range", value: null }}
             />
@@ -439,31 +460,7 @@ const DashboardScreen = ({ route }) => {
                 { label: "★★★★", value: "3-4" },
                 { label: "★★★★★", value: "4-5" },
               ]}
-              style={{
-                inputIOS: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                inputAndroid: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                placeholder: {
-                  color: "#000000",
-                },
-              }}
+              style={pickerStyle}
               useNativeAndroidPickerStyle={false}
               placeholder={{ label: "Select Vehicle Rating", value: null }}
             />
@@ -478,31 +475,7 @@ const DashboardScreen = ({ route }) => {
                 { label: "★★★★", value: "3-4" },
                 { label: "★★★★★", value: "4-5" },
               ]}
-              style={{
-                inputIOS: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                inputAndroid: {
-                  width: "auto",
-                  height: "auto",
-                  textAlign: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  backgroundColor: "#ECECEC",
-                  color: "black",
-                  borderRadius: 100,
-                },
-                placeholder: {
-                  color: "#000000",
-                },
-              }}
+              style={pickerStyle}
               useNativeAndroidPickerStyle={false}
               placeholder={{ label: "Select Business Rating", value: null }}
             />
@@ -523,23 +496,39 @@ const DashboardScreen = ({ route }) => {
                 paddingVertical: 50,
               }}
             >
-              <ActivityIndicator size="large" color="#4a5565" />
+              <ActivityIndicator size="large" color="red" />
             </View>
           ) : scooters.length > 0 ? (
             scooters.map((scooter) => (
-              <TouchableOpacity
+              <View
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  backgroundColor: "#FFFFFF",
+                }}
                 key={scooter.id}
-                style={styles.scooterCard}
-                onPress={() =>
-                  navigation.navigate("VehicleDetail", {
-                    motorcycle: scooter,
-                    startDate,
-                    endDate,
-                    pickUpTime,
-                    returnTime,
-                  })
-                }
               >
+                <TouchableOpacity
+                  style={{
+                    zIndex: 999,
+                    position: "absolute",
+                    right: 10,
+                    top: 10,
+                    backgroundColor: "#FCFBF4",
+                    padding: 2,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 100,
+                  }}
+                  onPress={() => toggleFavorite(scooter.id)}
+                >
+                  <Ionicons
+                    name={scooter.isFavorite ? "heart" : "heart-outline"}
+                    size={30}
+                    color="#FF3B30"
+                  />
+                </TouchableOpacity>
+
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {scooter.images.map((imgUrl, index) => (
                     <Image
@@ -549,60 +538,81 @@ const DashboardScreen = ({ route }) => {
                     />
                   ))}
                 </ScrollView>
+                <TouchableOpacity
+                  style={styles.scooterCard}
+                  onPress={() =>
+                    navigation.navigate("VehicleDetail", {
+                      motorcycle: scooter,
+                      startDate,
+                      endDate,
+                      pickUpTime,
+                      returnTime,
+                    })
+                  }
+                >
+                  <View style={styles.floatingBox}>
+                    <View
+                      style={{
+                        height: 15,
+                        width: "100%",
+                        backgroundColor: "#EF0000",
+                        borderTopStartRadius: 10,
+                        borderTopEndRadius: 10,
+                      }}
+                    ></View>
+                    <Text style={styles.floatingText}>
+                      ₱{scooter.pricePerDay}/day
+                    </Text>
+                  </View>
 
-                <View style={styles.floatingBox}>
-                  <Text style={styles.floatingText}>
-                    ₱{scooter.pricePerDay}/day
+                  <Text style={styles.scooterName}>{scooter.name}</Text>
+                  <View style={styles.starLocation}>
+                    {renderStars(scooter.vehicleRating ?? 0)}
+                    <Icon name="location-pin" size={16} color="#4a5565" />
+                  </View>
+                  <Text style={styles.locationText}>
+                    {scooter.businessAddress}
                   </Text>
-                </View>
-
-                <Text style={styles.scooterName}>{scooter.name}</Text>
-                <View style={styles.starLocation}>
-                  {renderStars(scooter.vehicleRating ?? 0)}
-                  <Icon name="location-pin" size={16} color="#4a5565" />
-                </View>
-                <Text style={styles.locationText}>
-                  {scooter.businessAddress}
-                </Text>
-                {scooter.distance !== null && (
-                  <Text
-                    style={[
-                      styles.locationText,
-                      { fontStyle: "italic", color: "#4a5565" },
-                    ]}
-                  >
-                    📍 {scooter.distance.toFixed(2)} km Away From You
-                  </Text>
-                )}
-                <View style={styles.businessDetail}>
-                  <Image
-                    source={{ uri: scooter?.businessProfile }}
-                    style={styles.smallIcon}
-                  />
-                  <Text style={styles.businessText}>
-                    {scooter.businessName}
-                  </Text>
-                  {scooter.businessVerified ? (
-                    <Icon name="verified" size={16} color="#4a5565" />
-                  ) : (
-                    <Icon name="help" size={16} color="#4a5565" />
+                  {scooter.distance !== null && (
+                    <Text
+                      style={[
+                        styles.locationText,
+                        { fontStyle: "italic", color: "#4a5565" },
+                      ]}
+                    >
+                      📍 {scooter.distance.toFixed(2)} km Away From You
+                    </Text>
                   )}
-                </View>
+                  <View style={styles.businessDetail}>
+                    <Image
+                      source={{ uri: scooter?.businessProfile }}
+                      style={styles.smallIcon}
+                    />
+                    <Text style={styles.businessText}>
+                      {scooter.businessName}
+                    </Text>
+                    {scooter.businessVerified ? (
+                      <Icon name="verified" size={16} color="#4a5565" />
+                    ) : (
+                      <Icon name="help" size={16} color="#4a5565" />
+                    )}
+                  </View>
 
-                <View style={styles.businessRating}>
-                  <Text style={styles.textRating}>
-                    {scooter.supplierRating}
+                  <View style={styles.businessRating}>
+                    <Text style={styles.textRating}>
+                      {scooter.supplierRating}
+                    </Text>
+                    <Text style={styles.textRating}>
+                      {RatingStatus(scooter.supplierRating)}
+                    </Text>
+                    <Icon name="star" size={16} color="#FFD700" />
+                    <Text style={styles.businessText}>Supplier Rating</Text>
+                  </View>
+                  <Text style={styles.businessText}>
+                    {scooter.supplierRatingCount} Supplier User Ratings
                   </Text>
-                  <Text style={styles.textRating}>
-                    {RatingStatus(scooter.supplierRating)}
-                  </Text>
-                  <Icon name="star" size={16} color="#FFD700" />
-                  <Text style={styles.businessText}>Supplier Rating</Text>
-                </View>
-                <Text style={styles.businessText}>
-                  {scooter.supplierRatingCount} Supplier User Ratings
-                </Text>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
             ))
           ) : (
             <Text style={styles.noResults}>No vehicles available</Text>
@@ -624,12 +634,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 20,
     right: 20,
-    zIndex: 10, // Make sure it's above everything
+    zIndex: 10,
     backgroundColor: "#fff",
     borderRadius: 50,
     padding: 10,
-    elevation: 5, // For Android
-    shadowColor: "#000", // For iOS
+    elevation: 5,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
@@ -763,7 +773,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     alignItems: "flex-end",
     backgroundColor: "#FFFFFF",
-    padding: 10,
     borderRadius: 5,
     zIndex: 10,
     color: "red",
@@ -771,9 +780,11 @@ const styles = StyleSheet.create({
   },
 
   floatingText: {
+    padding: 10,
     font: "bold",
     color: "#EF0000",
     fontSize: 16,
+    fontFamily: "Inter-Semibold",
   },
 
   scooterImage: {
@@ -809,5 +820,31 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 });
+
+const pickerStyle = {
+  inputIOS: {
+    width: "auto",
+    height: "auto",
+    textAlign: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    color: "black",
+    borderRadius: 100,
+  },
+  inputAndroid: {
+    width: "auto",
+    height: "auto",
+    textAlign: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    color: "black",
+    borderRadius: 100,
+  },
+  placeholder: {
+    color: "#000000",
+  },
+};
 
 export default DashboardScreen;
