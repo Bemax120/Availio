@@ -21,6 +21,7 @@ import ChatScreen from "./components/ChatScreen";
 import EnhancedFilterScreen from "./components/EnhancedFilterScreen";
 import RatingScreen from "./components/RatingScreen";
 import MapPinScreen from "./components/MapPinScreen";
+import MapBusinessScreen from "./components/MapBusinessScreen";
 import VehicleDetailScreen from "./components/VehicleDetailScreen";
 import LandingScreen from "./components/LandingScreen";
 import { useFonts } from "expo-font";
@@ -61,16 +62,19 @@ function HomeTabs({ route }) {
       />
       <Tab.Screen
         options={{ headerShown: false }}
+        initialParams={{ filters }}
         name="Favorite"
         component={MotorcycleFavoritesScreen}
       />
       <Tab.Screen
         options={{ headerShown: false }}
+        initialParams={{ filters }}
         name="Book"
         component={MotorcycleBookScreen}
       />
       <Tab.Screen
         options={{ headerShown: false }}
+        initialParams={{ filters }}
         name="Account"
         component={ProfilePage}
       />
@@ -103,6 +107,11 @@ const App = () => {
           name="MapPinScreen"
           options={{ headerShown: false }}
           component={MapPinScreen}
+        />
+        <Stack.Screen
+          name="MapBusinessScreen"
+          options={{ headerShown: false }}
+          component={MapBusinessScreen}
         />
         <Stack.Screen
           name="Filter"

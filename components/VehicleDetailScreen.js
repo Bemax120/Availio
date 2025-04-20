@@ -13,7 +13,7 @@ import { getAuth } from "firebase/auth";
 const { width } = Dimensions.get("window");
 
 const VehicleDetailScreen = ({ route, navigation }) => {
-  const { motorcycle, startDate, endDate, pickUpTime, returnTime } =
+  const { motorcycle, startDate, endDate, pickUpTime, returnTime, methodType } =
     route.params;
   const auth = getAuth();
 
@@ -58,6 +58,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
                   endDate,
                   pickUpTime,
                   returnTime,
+                  methodType,
                 })
               : navigation.navigate("Login");
           }}

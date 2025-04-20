@@ -54,6 +54,7 @@ const DashboardScreen = ({ route }) => {
   const endDate = filters.endDate;
   const pickUpTime = filters.pickUpTime;
   const returnTime = filters.returnTime;
+  const methodType = filters.methodType;
 
   const [searchText, setSearchText] = useState("");
   const [scooters, setScooters] = useState([]);
@@ -388,7 +389,7 @@ const DashboardScreen = ({ route }) => {
   return (
     <View style={{ flex: 1, paddingTop: 60, backgroundColor: "#FCFBF4" }}>
       <TouchableOpacity
-        onPress={() => navigation.navigate("MapPinScreen")}
+        onPress={() => navigation.navigate("MapBusinessScreen")}
         style={styles.mapIcon}
       >
         <Ionicons name="map" size={40} color="red" />
@@ -547,6 +548,7 @@ const DashboardScreen = ({ route }) => {
                       endDate,
                       pickUpTime,
                       returnTime,
+                      methodType,
                     })
                   }
                 >
