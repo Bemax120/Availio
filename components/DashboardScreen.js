@@ -68,6 +68,14 @@ const DashboardScreen = ({ route }) => {
   const [vehicleRatingFilter, setVehicleRatingFilter] = useState(null);
   const [businessRatingFilter, setBusinessRatingFilter] = useState(null);
 
+  const clearFilters = () => {
+    setSearchText("");
+    setDisplacementFilter(null);
+    setPriceFilter(null);
+    setVehicleRatingFilter(null);
+    setBusinessRatingFilter(null);
+  };
+
   const applyFilters = () => {
     let filtered = [...allScooters];
 
@@ -420,6 +428,10 @@ const DashboardScreen = ({ route }) => {
               gap: 12,
             }}
           >
+            <TouchableOpacity onPress={clearFilters} style={styles.pickerStyle}>
+              <Text>Clear Filters</Text>
+            </TouchableOpacity>
+
             <RNPickerSelect
               onValueChange={(value) => setDisplacementFilter(value)}
               value={displacementFilter}
@@ -709,6 +721,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
+    backgroundColor: "#FFFFFF",
   },
 
   searchIcon: {
@@ -820,6 +833,17 @@ const styles = StyleSheet.create({
 
   noResults: {
     padding: 20,
+  },
+
+  pickerStyle: {
+    width: "auto",
+    height: "auto",
+    textAlign: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#FFFFFF",
+    color: "black",
+    borderRadius: 100,
   },
 });
 

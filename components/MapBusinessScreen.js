@@ -185,22 +185,29 @@ const MapBusinessScreen = () => {
     <View style={{ flex: 1 }}>
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate("HomeTabs", {
-                locationFilter: centerLocation,
-                locationAddress: address,
-                vehicleType,
-                startDate,
-                endDate,
-                pickUpTime,
-                returnTime,
-              })
-            }
-          >
-            <Ionicons name="arrow-back" size={30} color="black" />
-          </TouchableOpacity>
-
+          {centerLocation &&
+          address &&
+          vehicleType &&
+          startDate &&
+          endDate &&
+          pickUpTime &&
+          returnTime ? (
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("HomeTabs", {
+                  locationFilter: centerLocation,
+                  locationAddress: address,
+                  vehicleType,
+                  startDate,
+                  endDate,
+                  pickUpTime,
+                  returnTime,
+                })
+              }
+            >
+              <Ionicons name="arrow-back" size={30} color="black" />
+            </TouchableOpacity>
+          ) : null}
           <TextInput
             placeholder="Search for a location"
             value={searchText}
