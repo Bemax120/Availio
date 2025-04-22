@@ -8,7 +8,7 @@ export default function DateTimePickerScreen({ navigation }) {
   const route = useRoute();
 
   const vehicleType = route.params?.vehicleType || null;
-  const locationAddress = route.params?.locationAddress || null;
+  const locationFilter = route.params?.locationFilter || null;
 
   const [selectedDates, setSelectedDates] = useState({});
   const [pickUpTime, setPickUpTime] = useState("10:00 AM");
@@ -67,7 +67,7 @@ export default function DateTimePickerScreen({ navigation }) {
       pickUpTime,
       returnTime,
       vehicleType,
-      locationAddress,
+      locationFilter,
     });
   };
 

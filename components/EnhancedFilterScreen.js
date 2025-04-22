@@ -142,10 +142,12 @@ const EnhancedFilterScreen = () => {
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             <Ionicons name="search" size={20} color="gray" />
-            <Text style={styles.mapButtonText}>Near Me</Text>
+            {locationAddress ? null : (
+              <Text style={styles.mapButtonText}>Near Me</Text>
+            )}
             {locationAddress && (
               <Text style={{ maxWidth: 200, color: "#1e293b" }}>
-                ({trimmedAddress})
+                ({locationAddress})
               </Text>
             )}
           </View>
@@ -165,7 +167,7 @@ const EnhancedFilterScreen = () => {
           onPress={() => {
             navigation.navigate("DateTimePicker", {
               vehicleType,
-              locationAddress,
+              locationFilter,
             });
           }}
         >

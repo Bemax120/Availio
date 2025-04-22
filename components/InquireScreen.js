@@ -149,15 +149,31 @@ export default function InquireScreen({ route, navigation }) {
             </Text>
             <Text style={styles.price}>₱{totalPrice}</Text>
 
-            <View style={styles.statusContainer}>
+            <View
+              style={[
+                styles.statusContainer,
+                {
+                  backgroundColor:
+                    bookingStatus === "Complete"
+                      ? "green"
+                      : bookingStatus === "On-Going"
+                      ? "orange"
+                      : "red",
+                },
+              ]}
+            >
               <Text
                 style={[
                   styles.statusText,
-                  { color: bookingStatus === "Complete" ? "green" : "red" },
+                  {
+                    color: "black",
+                  },
                 ]}
               >
                 {bookingStatus === "Complete"
                   ? "Complete"
+                  : bookingStatus === "On-Going"
+                  ? "On-Going"
                   : bookingStatus === "Cancelled"
                   ? "Cancelled"
                   : "Waiting for Confirmation"}
@@ -166,6 +182,7 @@ export default function InquireScreen({ route, navigation }) {
           </View>
 
           <View style={styles.detailContainer}>
+            {bookingStatus === "On-Going"}
             <View style={styles.refundContainer}>
               <View style={styles.refundItem}>
                 <Text style={styles.checkMark}>✅</Text>
@@ -203,7 +220,9 @@ export default function InquireScreen({ route, navigation }) {
               <Text style={styles.value}>{rentalDuration}</Text>
             </View>
 
-            {bookingStatus !== "Cancelled" && bookingStatus !== "Complete" ? (
+            {bookingStatus !== "Cancelled" &&
+            bookingStatus !== "Complete" &&
+            bookingStatus !== "On-Going" ? (
               <TouchableOpacity
                 style={styles.secondaryButton}
                 onPress={async () => {
