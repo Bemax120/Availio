@@ -169,7 +169,7 @@ const MotorcycleBookScreen = () => {
             showsHorizontalScrollIndicator={false}
             style={styles.segmentContainer}
           >
-            {["Pending", "Complete", "On-Going", "Cancelled"].map((item) => (
+            {["Pending", "On-Going", "Complete", "Cancelled"].map((item) => (
               <TouchableOpacity
                 key={item}
                 style={[

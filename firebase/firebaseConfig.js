@@ -24,7 +24,6 @@ const firebaseConfig = {
   measurementId: FIREBASE_MEASUREMENT_ID,
 };
 
-// ✅ Prevent duplicate Firebase initialization
 let app;
 if (!global.firebaseApp) {
   app = initializeApp(firebaseConfig);
@@ -41,3 +40,7 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 export { app, auth, db, storage };
+
+if (__DEV__) {
+  console.log("Firebase Config", firebaseConfig);
+}
