@@ -105,7 +105,7 @@ const App = () => {
 
   return (
     <NavigationContainer onReady={onLayoutRootView}>
-      <Stack.Navigator initialRouteName="Filter">
+      <Stack.Navigator initialRouteName="HomeTabs">
         <Stack.Screen
           name="Landing"
           component={LandingScreen}
