@@ -24,7 +24,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import RNPickerSelect from "react-native-picker-select";
+import { Picker } from "@react-native-picker/picker";
 import { getAuth } from "firebase/auth";
 import Toast from "react-native-toast-message";
 
@@ -422,76 +422,88 @@ const DashboardScreen = ({ route }) => {
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 12,
-            }}
-          >
-            <TouchableOpacity onPress={clearFilters} style={styles.pickerStyle}>
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <TouchableOpacity
+              onPress={clearFilters}
+              style={styles.pickerWrapper}
+            >
               <Text>Clear Filters</Text>
             </TouchableOpacity>
 
-            <RNPickerSelect
-              onValueChange={(value) => setDisplacementFilter(value)}
-              value={displacementFilter}
-              items={[
-                { label: "100cc - 150cc", value: "100-150" },
-                { label: "150cc - 200cc", value: "150-200" },
-                { label: "200cc - 300cc", value: "200-300" },
-                { label: "300cc - 500cc", value: "300-500" },
-                { label: "500cc - 1000cc", value: "500-1000" },
-              ]}
-              style={pickerStyle}
-              useNativeAndroidPickerStyle={false}
-              placeholder={{ label: "Select Displacement", value: null }}
-            />
+            <View style={styles.pickerWrapper}>
+              <Picker
+                onValueChange={(value) => setDisplacementFilter(value)}
+                selectedValue={displacementFilter}
+                style={styles.pickerStyle}
+              >
+                <Picker.Item
+                  label="Select Displacement"
+                  value="Select Displacement"
+                />
+                <Picker.Item label="100cc - 150cc" value="100-150" />
+                <Picker.Item label="150cc - 200cc" value="150-200" />
+                <Picker.Item label="200cc - 300cc" value="200-300" />
+                <Picker.Item label="300cc - 500cc" value="300-500" />
+                <Picker.Item label="500cc - 1000cc" value="500-1000" />
+              </Picker>
+            </View>
 
-            <RNPickerSelect
-              onValueChange={(value) => setPriceFilter(value)}
-              value={priceFilter}
-              items={[
-                { label: "Less Than ₱300", value: "0-300" },
-                { label: "₱300 - ₱500", value: "300-500" },
-                { label: "₱500 - ₱700", value: "500-700" },
-                { label: "₱700 - ₱1000", value: "700-1000" },
-                { label: "₱1000 - ₱1500", value: "1000-1500" },
-                { label: "Greater Than ₱1500", value: "1500-999999999" },
-              ]}
-              style={pickerStyle}
-              useNativeAndroidPickerStyle={false}
-              placeholder={{ label: "Select Price Range", value: null }}
-            />
+            <View style={styles.pickerWrapper}>
+              <Picker
+                onValueChange={(value) => setPriceFilter(value)}
+                selectedValue={priceFilter}
+                style={styles.pickerStyle}
+              >
+                <Picker.Item
+                  label="Select Price Range"
+                  value="Select Price Range"
+                />
+                <Picker.Item label="Less Than ₱300" value="0-300" />
+                <Picker.Item label="₱300 - ₱500" value="300-500" />
+                <Picker.Item label="₱500 - ₱700" value="500-700" />
+                <Picker.Item label="₱700 - ₱1000" value="700-1000" />
+                <Picker.Item
+                  label="Greater Than ₱1500"
+                  value="1500-999999999"
+                />
+              </Picker>
+            </View>
 
-            <RNPickerSelect
-              onValueChange={(value) => setVehicleRatingFilter(value)}
-              value={vehicleRatingFilter}
-              items={[
-                { label: "★ ", value: "0-1" },
-                { label: "★★", value: "1-2" },
-                { label: "★★★", value: "2-3" },
-                { label: "★★★★", value: "3-4" },
-                { label: "★★★★★", value: "4-5" },
-              ]}
-              style={pickerStyle}
-              useNativeAndroidPickerStyle={false}
-              placeholder={{ label: "Select Vehicle Rating", value: null }}
-            />
+            <View style={styles.pickerWrapper}>
+              <Picker
+                onValueChange={(value) => setVehicleRatingFilter(value)}
+                selectedValue={vehicleRatingFilter}
+                style={styles.pickerStyle}
+              >
+                <Picker.Item
+                  label="Select Vehicle Rating"
+                  value="Select Vehicle Rating"
+                />
+                <Picker.Item label="★" value="0-1" />
+                <Picker.Item label="★★" value="1-2" />
+                <Picker.Item label="★★★" value="2-3" />
+                <Picker.Item label="★★★★" value="3-4" />
+                <Picker.Item label="★★★★★" value="4-5" />
+              </Picker>
+            </View>
 
-            <RNPickerSelect
-              onValueChange={(value) => setBusinessRatingFilter(value)}
-              value={businessRatingFilter}
-              items={[
-                { label: "★ ", value: "0-1" },
-                { label: "★★", value: "1-2" },
-                { label: "★★★", value: "2-3" },
-                { label: "★★★★", value: "3-4" },
-                { label: "★★★★★", value: "4-5" },
-              ]}
-              style={pickerStyle}
-              useNativeAndroidPickerStyle={false}
-              placeholder={{ label: "Select Business Rating", value: null }}
-            />
+            <View style={styles.pickerWrapper}>
+              <Picker
+                onValueChange={(value) => setBusinessRatingFilter(value)}
+                selectedValue={businessRatingFilter}
+                style={styles.pickerStyle}
+              >
+                <Picker.Item
+                  label="Select Business Rating"
+                  value="Select Business Rating"
+                />
+                <Picker.Item label="★" value="0-1" />
+                <Picker.Item label="★★" value="1-2" />
+                <Picker.Item label="★★★" value="2-3" />
+                <Picker.Item label="★★★★" value="3-4" />
+                <Picker.Item label="★★★★★" value="4-5" />
+              </Picker>
+            </View>
           </View>
         </ScrollView>
 
@@ -835,42 +847,25 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 
+  pickerWrapper: {
+    borderRadius: 100,
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 16,
+  },
+
   pickerStyle: {
-    width: "auto",
-    height: "auto",
+    height: 50,
     textAlign: "center",
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
     color: "black",
-    borderRadius: 100,
+    justifyContent: "center",
+    width: 250,
+    alignItems: "center",
   },
 });
-
-const pickerStyle = {
-  inputIOS: {
-    width: "auto",
-    height: "auto",
-    textAlign: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-    color: "black",
-    borderRadius: 100,
-  },
-  inputAndroid: {
-    width: "auto",
-    height: "auto",
-    textAlign: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-    color: "black",
-    borderRadius: 100,
-  },
-  placeholder: {
-    color: "#000000",
-  },
-};
 
 export default DashboardScreen;

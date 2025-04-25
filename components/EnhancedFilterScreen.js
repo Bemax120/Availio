@@ -7,7 +7,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import RNPickerSelect from "react-native-picker-select";
+import { Picker } from "@react-native-picker/picker";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -138,7 +138,14 @@ const EnhancedFilterScreen = () => {
           style={styles.mapButton}
           onPress={() => navigation.navigate("MapPinScreen", { vehicleType })}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              paddingVertical: 4,
+            }}
+          >
             <Ionicons name="search" size={20} color="gray" />
             {locationAddress ? null : (
               <Text style={styles.mapButtonText}>Near Me</Text>
@@ -157,7 +164,8 @@ const EnhancedFilterScreen = () => {
           style={{
             flexDirection: "row",
             backgroundColor: "#ECECEC",
-            padding: 12,
+            paddingHorizontal: 12,
+            paddingVertical: 16,
             borderRadius: 100,
             gap: 5,
             marginBottom: 20,
@@ -219,7 +227,6 @@ const EnhancedFilterScreen = () => {
           style={{
             flexDirection: "row",
             backgroundColor: "#ECECEC",
-            paddingVertical: 4,
             paddingHorizontal: 16,
             borderRadius: 100,
             gap: 5,
@@ -227,25 +234,21 @@ const EnhancedFilterScreen = () => {
             alignItems: "center",
           }}
         >
-          <RNPickerSelect
-            onValueChange={(value) => setSortOrder(value)}
-            value={sortOrder}
-            items={[
-              { label: "No Sorting", value: "none" },
-              { label: "Nearest First", value: "nearest" },
-              { label: "Farthest First", value: "farthest" },
-            ]}
-            useNativeAndroidPickerStyle={false}
-            style={pickerStyles}
-            placeholder={{ label: "Select Distance", value: null }}
-          />
+          <Picker
+            selectedValue={sortOrder}
+            onValueChange={(itemValue) => setSortOrder(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="No Sorting" value="none" />
+            <Picker.Item label="Nearest First" value="nearest" />
+            <Picker.Item label="Farthest First" value="farthest" />
+          </Picker>
         </View>
 
         <View
           style={{
             flexDirection: "row",
             backgroundColor: "#ECECEC",
-            paddingVertical: 4,
             paddingHorizontal: 16,
             borderRadius: 100,
             gap: 5,
@@ -253,17 +256,14 @@ const EnhancedFilterScreen = () => {
             alignItems: "center",
           }}
         >
-          <RNPickerSelect
-            onValueChange={(value) => setMethodType(value)}
-            value={methodType}
-            items={[
-              { label: "Delivery", value: "Delivery" },
-              { label: "Pickup", value: "Pickup" },
-            ]}
-            useNativeAndroidPickerStyle={false}
-            style={pickerStyles}
-            placeholder={{ label: "Method", value: "Delivery" }}
-          />
+          <Picker
+            selectedValue={methodType}
+            onValueChange={(itemValue) => setMethodType(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Delivery" value="Delivery" />
+            <Picker.Item label="Pickup" value="Pickup" />
+          </Picker>
         </View>
 
         <View
@@ -355,6 +355,9 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
+  picker: {
+    width: "100%",
+  },
   subHeader: {
     fontSize: 18,
     color: "#333",
@@ -382,16 +385,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
-const pickerStyles = {
-  inputIOS: { color: "black" },
-  inputAndroid: {
-    color: "black",
-    backgroundColor: "transparent",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  placeholder: {
-    color: "#000000",
-  },
-};

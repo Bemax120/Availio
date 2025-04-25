@@ -1,15 +1,11 @@
-import { useState } from "react";
 import { ScrollView, View, Image, TouchableOpacity, Text } from "react-native";
 const Availio = require("../assets/AvailioBanner.png");
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import RNPickerSelect from "react-native-picker-select";
 
 const LandingScreen = () => {
   const navigation = useNavigation();
-  const route = useRoute();
-  const [methodType, setMethodType] = useState("none");
 
   return (
     <ScrollView
@@ -128,33 +124,8 @@ const LandingScreen = () => {
           />
         </TouchableOpacity>
       </View>
-
-      <RNPickerSelect
-        onValueChange={(value) => setMethodType(value)}
-        value={methodType}
-        items={[
-          { label: "Delivery", value: "Delivery" },
-          { label: "Pickup", value: "Pickup" },
-        ]}
-        useNativeAndroidPickerStyle={false}
-        style={pickerStyles}
-        placeholder={{ label: "Method", value: "Delivery" }}
-      />
     </ScrollView>
   );
 };
 
 export default LandingScreen;
-
-const pickerStyles = {
-  inputIOS: { color: "black" },
-  inputAndroid: {
-    color: "black",
-    backgroundColor: "transparent",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  placeholder: {
-    color: "#000000",
-  },
-};
