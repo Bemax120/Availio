@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -27,9 +27,11 @@ import LandingScreen from "./components/LandingScreen";
 import { useFonts } from "expo-font";
 import "react-native-get-random-values";
 import Toast from "react-native-toast-message";
+import * as SplashScreen from "expo-splash-screen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+SplashScreen.preventAutoHideAsync();
 
 function HomeTabs({ route }) {
   const filters = route?.params?.filters || null;
@@ -83,14 +85,24 @@ function HomeTabs({ route }) {
 }
 
 const App = () => {
-  useFonts({
+  const [fontsLoaded] = useFonts({
     "Inter-Regular": require("./fonts/Inter-Regular.ttf"),
     "Inter-Semibold": require("./fonts/Inter-Semibold.ttf"),
     "Inter-Bold": require("./fonts/Inter-Bold.ttf"),
   });
 
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
-    <NavigationContainer>
+    <NavigationContainer onReady={onLayoutRootView}>
       <Stack.Navigator initialRouteName="Landing">
         <Stack.Screen
           name="Landing"

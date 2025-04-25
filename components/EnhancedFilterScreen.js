@@ -107,16 +107,14 @@ const EnhancedFilterScreen = () => {
             name="two-wheeler"
             size={75}
             color="red"
-          /> ? (
-            vehicleType === "4 Wheels"
-          ) : (
-            <Ionicons
-              style={{ position: "absolute", bottom: 30, right: 25 }}
-              name="car-sport"
-              size={75}
-              color="blue"
-            />
-          )
+          />
+        ) : vehicleType === "4 Wheels" ? (
+          <Ionicons
+            style={{ position: "absolute", bottom: 30, right: 25 }}
+            name="car-sport"
+            size={75}
+            color="blue"
+          />
         ) : (
           <>
             <MaterialIcons
@@ -386,19 +384,12 @@ const styles = StyleSheet.create({
 });
 
 const pickerStyles = {
-  inputIOS: {
-    width: "auto",
-    height: "auto",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    color: "black",
-  },
+  inputIOS: { color: "black" },
   inputAndroid: {
-    width: "auto",
-    height: "auto",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
     color: "black",
+    backgroundColor: "transparent",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   placeholder: {
     color: "#000000",
