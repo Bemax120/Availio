@@ -9,24 +9,14 @@ import {
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+// import { LinearGradient } from "expo-linear-gradient";
+// import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 
 const EnhancedFilterScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   console.log("route.params", route.params);
-
-  const [fontsLoaded] = useFonts({
-    "Inter-Regular": require("../fonts/Inter-Regular.ttf"),
-    "Inter-Semibold": require("../fonts/Inter-Semibold.ttf"),
-    "Inter-Bold": require("../fonts/Inter-Bold.ttf"),
-  });
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   const locationAddress = route.params?.locationAddress || null;
   const trimmedAddress =
@@ -98,9 +88,23 @@ const EnhancedFilterScreen = () => {
     console.log("Filter Screen Mounted");
   }, []);
 
+  const [fontsLoaded] = useFonts({
+    "Inter-Regular": require("../fonts/Inter-Regular.ttf"),
+    "Inter-Semibold": require("../fonts/Inter-Semibold.ttf"),
+    "Inter-Bold": require("../fonts/Inter-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <LinearGradient
+      {/* <LinearGradient
         colors={[topGradient, bottomGradient]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
@@ -148,7 +152,7 @@ const EnhancedFilterScreen = () => {
             />
           </>
         )}
-      </LinearGradient>
+      </LinearGradient> */}
 
       <View style={styles.container}>
         <TouchableOpacity
@@ -156,7 +160,7 @@ const EnhancedFilterScreen = () => {
           onPress={() => navigation.navigate("MapPinScreen", { vehicleType })}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Ionicons name="search" size={20} color="gray" />
+            {/* <Ionicons name="search" size={20} color="gray" /> */}
             {locationAddress ? null : (
               <Text style={styles.mapButtonText}>Near Me</Text>
             )}
@@ -167,7 +171,7 @@ const EnhancedFilterScreen = () => {
             )}
           </View>
 
-          <Ionicons name="send" size={20} color="black" />
+          {/* <Ionicons name="send" size={20} color="black" /> */}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -186,7 +190,7 @@ const EnhancedFilterScreen = () => {
             });
           }}
         >
-          <Ionicons name="calendar" size={20} color="gray" />
+          {/* <Ionicons name="calendar" size={20} color="gray" /> */}
           <Text style={styles.mapButtonText}>
             {startDate && endDate && pickUpTime && returnTime
               ? "Reselect Booking Date"
@@ -212,7 +216,7 @@ const EnhancedFilterScreen = () => {
                 gap: 5,
               }}
             >
-              <Ionicons name="time" size={20} color="gray" />
+              {/* <Ionicons name="time" size={20} color="gray" /> */}
               <Text>{formattedStart}</Text>
             </View>
 
@@ -226,7 +230,7 @@ const EnhancedFilterScreen = () => {
                 gap: 5,
               }}
             >
-              <Ionicons name="time" size={20} color="gray" />
+              {/* <Ionicons name="time" size={20} color="gray" /> */}
               <Text>{formattedEnd}</Text>
             </View>
           </View>
@@ -306,7 +310,7 @@ const EnhancedFilterScreen = () => {
               borderRadius: 100,
             }}
           >
-            <Ionicons name="map" size={20} color="red" />
+            {/* <Ionicons name="map" size={20} color="red" /> */}
           </TouchableOpacity>
           <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
             <Text style={styles.applyButtonText}>Search</Text>
