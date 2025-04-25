@@ -11,15 +11,28 @@ import RNPickerSelect from "react-native-picker-select";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
 
 const EnhancedFilterScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  console.log("route.params", route.params);
+
+  const [fontsLoaded] = useFonts({
+    "Inter-Regular": require("../fonts/Inter-Regular.ttf"),
+    "Inter-Semibold": require("../fonts/Inter-Semibold.ttf"),
+    "Inter-Bold": require("../fonts/Inter-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   const locationAddress = route.params?.locationAddress || null;
-  const trimmedAddress = locationAddress
-    ? locationAddress.substring(locationAddress.lastIndexOf(",") + 1).trim()
-    : "";
+  const trimmedAddress =
+    typeof locationAddress === "string"
+      ? locationAddress.substring(locationAddress.lastIndexOf(",") + 1).trim()
+      : "";
 
   const locationFilter = route.params?.locationFilter || null;
   const vehicleType = route.params?.vehicleType || null;
@@ -64,7 +77,7 @@ const EnhancedFilterScreen = () => {
       Alert.alert("No Method Type", "Please Select A Method Type!");
       return;
     }
-    navigation.replace("HomeTabs", { filters });
+    navigation.navigate("HomeTabs", { filters });
   };
 
   let topGradient = "";
@@ -80,6 +93,10 @@ const EnhancedFilterScreen = () => {
     topGradient = "#E4A0F7";
     bottomGradient = "#D7BFDC";
   }
+
+  useEffect(() => {
+    console.log("Filter Screen Mounted");
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
