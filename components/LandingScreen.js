@@ -1,12 +1,12 @@
 import { ScrollView, View, Image, TouchableOpacity, Text } from "react-native";
 const Availio = require("../assets/AvailioBanner.png");
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const LandingScreen = () => {
   const navigation = useNavigation();
-  const route = useRoute();
+
   return (
     <ScrollView
       contentContainerStyle={{

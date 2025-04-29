@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Calendar } from "react-native-calendars";
-import RNPickerSelect from "react-native-picker-select";
+import { Picker } from "@react-native-picker/picker";
 import { useRoute } from "@react-navigation/native";
 
 export default function DateTimePickerScreen({ navigation }) {
   const route = useRoute();
 
   const vehicleType = route.params?.vehicleType || null;
+  const locationAddress = route.params?.locationAddress || null;
   const locationFilter = route.params?.locationFilter || null;
 
   const [selectedDates, setSelectedDates] = useState({});
@@ -68,6 +69,7 @@ export default function DateTimePickerScreen({ navigation }) {
       returnTime,
       vehicleType,
       locationFilter,
+      locationAddress,
     });
   };
 
@@ -87,28 +89,26 @@ export default function DateTimePickerScreen({ navigation }) {
 
       <View style={styles.pickerContainer}>
         <Text>Pick-up time</Text>
-        <RNPickerSelect
+        <Picker
           onValueChange={(value) => setPickUpTime(value)}
-          items={[
-            { label: "10:00 AM", value: "10:00 AM" },
-            { label: "11:00 AM", value: "11:00 AM" },
-            { label: "12:00 PM", value: "12:00 PM" },
-          ]}
-          value={pickUpTime}
-        />
+          selectedValue={pickUpTime}
+        >
+          <Picker.Item label="9:00 PM" value="9:00 PM" />
+          <Picker.Item label="10:00 PM" value="10:00 PM" />
+          <Picker.Item label="11:00 PM" value="11:00 PM" />
+        </Picker>
       </View>
 
       <View style={styles.pickerContainer}>
         <Text>Return time</Text>
-        <RNPickerSelect
+        <Picker
           onValueChange={(value) => setReturnTime(value)}
-          items={[
-            { label: "9:00 PM", value: "9:00 PM" },
-            { label: "10:00 PM", value: "10:00 PM" },
-            { label: "11:00 PM", value: "11:00 PM" },
-          ]}
-          value={returnTime}
-        />
+          selectedValue={returnTime}
+        >
+          <Picker.Item label="9:00 PM" value="9:00 PM" />
+          <Picker.Item label="10:00 PM" value="10:00 PM" />
+          <Picker.Item label="11:00 PM" value="11:00 PM" />
+        </Picker>
       </View>
 
       <TouchableOpacity style={styles.confirmButton} onPress={confirmSelection}>

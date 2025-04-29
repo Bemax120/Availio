@@ -16,10 +16,12 @@ import { getAuth } from "firebase/auth";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const MotorcycleBookScreen = () => {
+const MotorcycleBookScreen = ({ route }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("Pending");
+
+  const filters = route?.params?.filters || {};
 
   const navigation = useNavigation();
   const auth = getAuth();
@@ -31,7 +33,14 @@ const MotorcycleBookScreen = () => {
     if (!auth.currentUser) {
       navigation.reset({
         index: 0,
-        routes: [{ name: "Login" }],
+        routes: [
+          {
+            name: "Login",
+            params: {
+              filters,
+            },
+          },
+        ],
       });
     }
   }, [auth.currentUser]);

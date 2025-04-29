@@ -13,6 +13,7 @@ import { getAuth } from "firebase/auth";
 const { width } = Dimensions.get("window");
 
 const VehicleDetailScreen = ({ route, navigation }) => {
+  const filters = route?.params?.filters || {};
   const { motorcycle, startDate, endDate, pickUpTime, returnTime, methodType } =
     route.params;
   const auth = getAuth();
@@ -60,7 +61,7 @@ const VehicleDetailScreen = ({ route, navigation }) => {
                   returnTime,
                   methodType,
                 })
-              : navigation.navigate("Login");
+              : navigation.navigate("Login", { filters });
           }}
         >
           <Text style={styles.dateButtonText}>Book Now</Text>

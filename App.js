@@ -28,6 +28,8 @@ import { useFonts } from "expo-font";
 import "react-native-get-random-values";
 import Toast from "react-native-toast-message";
 import * as SplashScreen from "expo-splash-screen";
+import { LogBox } from "react-native";
+LogBox.ignoreAllLogs(); // temporarily if needed
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

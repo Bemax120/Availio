@@ -104,7 +104,17 @@ const MotorcycleFavoritesScreen = ({ route }) => {
 
   useEffect(() => {
     if (!user) {
-      navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: "Login",
+            params: {
+              filters,
+            },
+          },
+        ],
+      });
     }
   }, [user]);
 

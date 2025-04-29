@@ -22,11 +22,14 @@ const MapBusinessScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
 
+  const filters = route?.params?.filters || {};
+
   const vehicleType = route.params?.vehicleType || null;
   const startDate = route.params?.startDate;
   const endDate = route.params?.endDate;
   const pickUpTime = route.params?.pickUpTime;
   const returnTime = route.params?.returnTime;
+  const currentScreen = route.params?.screen;
 
   const [location, setLocation] = useState(null);
   const [centerLocation, setCenterLocation] = useState(null);
@@ -165,49 +168,27 @@ const MapBusinessScreen = () => {
     fetchAddress(coords.latitude, coords.longitude);
   };
 
-  const handleConfirmLocation = () => {
-    if (centerLocation) {
-      navigation.navigate("Filter", {
-        locationFilter: centerLocation,
-        locationAddress: address,
-        vehicleType,
-        startDate,
-        endDate,
-        pickUpTime,
-        returnTime,
-      });
-    } else {
-      Alert.alert("Location not selected");
-    }
-  };
-
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
-          {centerLocation &&
-          address &&
-          vehicleType &&
-          startDate &&
-          endDate &&
-          pickUpTime &&
-          returnTime ? (
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate("HomeTabs", {
-                  locationFilter: centerLocation,
-                  locationAddress: address,
-                  vehicleType,
-                  startDate,
-                  endDate,
-                  pickUpTime,
-                  returnTime,
-                })
-              }
-            >
-              <Ionicons name="arrow-back" size={30} color="black" />
-            </TouchableOpacity>
-          ) : null}
+          <TouchableOpacity
+            onPress={() =>
+              currentScreen === "Filter"
+                ? navigation.navigate("Filter", {
+                    locationFilter: centerLocation,
+                    locationAddress: address,
+                    vehicleType,
+                    startDate,
+                    endDate,
+                    pickUpTime,
+                    returnTime,
+                  })
+                : navigation.navigate("HomeTabs", { filters })
+            }
+          >
+            <Ionicons name="arrow-back" size={30} color="black" />
+          </TouchableOpacity>
           <TextInput
             placeholder="Search for a location"
             value={searchText}
@@ -274,29 +255,15 @@ const MapBusinessScreen = () => {
         </MapView>
       )}
 
-      <View style={styles.markerFixed}>
-        <Image
-          source={require("../assets/location.png")}
-          style={{ width: 40, height: 40 }}
-        />
-      </View>
-
       <View style={styles.addressContainer}>
         {loadingAddress ? (
           <ActivityIndicator color="#FCFBF4" size="small" />
         ) : (
           <Text style={styles.addressText}>
-            {address || "Move the map to select a location"}
+            {address || "Move the map to browse the location"}
           </Text>
         )}
       </View>
-
-      <TouchableOpacity
-        style={styles.confirmButton}
-        onPress={handleConfirmLocation}
-      >
-        <Text style={styles.confirmButtonText}>Confirm Location</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -338,7 +305,7 @@ const styles = StyleSheet.create({
   },
   addressContainer: {
     position: "absolute",
-    bottom: 90,
+    bottom: 20,
     left: 20,
     right: 20,
     backgroundColor: "#fff",

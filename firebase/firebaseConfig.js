@@ -40,7 +40,3 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 export { app, auth, db, storage };
-
-if (__DEV__) {
-  console.log("Firebase Config", firebaseConfig);
-}
