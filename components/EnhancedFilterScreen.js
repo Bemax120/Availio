@@ -15,6 +15,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 const EnhancedFilterScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const filters = route?.params?.filters || {};
 
   const locationAddress = route.params?.locationAddress || null;
   const trimmedAddress = locationAddress
@@ -48,6 +49,7 @@ const EnhancedFilterScreen = () => {
   const applyFilters = () => {
     const filters = {
       vehicleType,
+      locationAddress,
       locationFilter,
       sortOrder,
       startDate,
@@ -136,7 +138,15 @@ const EnhancedFilterScreen = () => {
       <View style={styles.container}>
         <TouchableOpacity
           style={styles.mapButton}
-          onPress={() => navigation.navigate("MapPinScreen", { vehicleType })}
+          onPress={() =>
+            navigation.navigate("MapPinScreen", {
+              vehicleType,
+              startDate,
+              endDate,
+              pickUpTime,
+              returnTime,
+            })
+          }
         >
           <View
             style={{
@@ -174,6 +184,7 @@ const EnhancedFilterScreen = () => {
             navigation.navigate("DateTimePicker", {
               vehicleType,
               locationFilter,
+              locationAddress,
             });
           }}
         >
@@ -272,12 +283,14 @@ const EnhancedFilterScreen = () => {
           <TouchableOpacity
             onPress={() =>
               navigation.navigate("MapBusinessScreen", {
+                filters,
                 vehicleType,
                 locationAddress,
                 startDate,
                 endDate,
                 pickUpTime,
                 returnTime,
+                screen: "Filter",
               })
             }
             style={{

@@ -21,11 +21,17 @@ import {
 } from "firebase/firestore";
 import { SocialIcon } from "react-native-elements";
 import { auth, db } from "../firebase/firebaseConfig";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 const defaultProfileImage = require("../assets/download.png");
 const Availio = require("../assets/Availio.png");
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+
+  const filters = route?.params?.filters || {};
+
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -93,7 +99,9 @@ const LoginScreen = ({ navigation }) => {
         await AsyncStorage.setItem("userData", JSON.stringify(finalUserData));
 
         Alert.alert("Success", `Welcome, ${finalUserData.firstName}!`);
-        navigation.replace("Landing");
+        navigation.navigate("HomeTabs", {
+          filters,
+        });
       } else {
         throw new Error("User data not found in Firestore");
       }
@@ -180,7 +188,7 @@ const LoginScreen = ({ navigation }) => {
         </Text>
       </Text>
       <Text
-        onPress={() => navigation.navigate("Landing")}
+        onPress={() => navigation.navigate("HomeTabs", { filters })}
         style={styles.registerText}
       >
         Continue as Guest

@@ -397,7 +397,7 @@ const DashboardScreen = ({ route }) => {
   return (
     <View style={{ flex: 1, paddingTop: 60, backgroundColor: "#FCFBF4" }}>
       <TouchableOpacity
-        onPress={() => navigation.navigate("MapBusinessScreen")}
+        onPress={() => navigation.navigate("MapBusinessScreen", { filters })}
         style={styles.mapIcon}
       >
         <Ionicons name="map" size={40} color="red" />
@@ -567,6 +567,7 @@ const DashboardScreen = ({ route }) => {
                   style={styles.scooterCard}
                   onPress={() =>
                     navigation.navigate("VehicleDetail", {
+                      filters,
                       motorcycle: scooter,
                       startDate,
                       endDate,

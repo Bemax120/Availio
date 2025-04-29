@@ -21,7 +21,8 @@ import { db, storage } from "../firebase/firebaseConfig";
 
 const defaultProfileImage = require("../assets/download.png");
 
-const ProfilePage = () => {
+const ProfilePage = ({ route }) => {
+  const filters = route?.params?.filters || {};
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editingPhone, setEditingPhone] = useState(false);
@@ -31,7 +32,17 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (!auth.currentUser) {
-      navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: "Login",
+            params: {
+              filters,
+            },
+          },
+        ],
+      });
     }
   }, [auth.currentUser]);
 
@@ -130,7 +141,7 @@ const ProfilePage = () => {
     try {
       await AsyncStorage.removeItem("userData");
       await signOut(auth);
-      navigation.replace("Landing");
+      navigation.replace("Filter");
     } catch (error) {
       console.error("Logout Error:", error);
       Alert.alert("Error", "Failed to log out. Please try again.");
