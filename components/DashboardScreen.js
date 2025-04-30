@@ -24,9 +24,10 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { Picker } from "@react-native-picker/picker";
 import { getAuth } from "firebase/auth";
 import Toast from "react-native-toast-message";
+import Modal from "react-native-modal";
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
 
 const calculateDistance = (loc1, loc2) => {
   const toRad = (value) => (value * Math.PI) / 180;
@@ -46,7 +47,11 @@ const calculateDistance = (loc1, loc2) => {
 };
 
 const DashboardScreen = ({ route }) => {
+  const navigation = useNavigation();
+
   const filters = route?.params?.filters || {};
+  const dashboardFilters = route?.params?.dashboardFilters || {};
+
   const locationFilter = filters.locationFilter;
   const vehicleFilter = filters.vehicleType;
 
@@ -56,25 +61,28 @@ const DashboardScreen = ({ route }) => {
   const returnTime = filters.returnTime;
   const methodType = filters.methodType;
 
-  const [searchText, setSearchText] = useState("");
-  const [scooters, setScooters] = useState([]);
-  const [allScooters, setAllScooters] = useState([]);
+  const vehicleRating = dashboardFilters.vehicleRating;
+  const priceRangeFilter = dashboardFilters.priceRangeFilter;
+  const businessRating = dashboardFilters.businessRating;
+  const displacementRangeFilter = dashboardFilters.displacementRangeFilter;
+
   const [refreshing, setRefreshing] = useState(false);
-  const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
 
+  const [searchText, setSearchText] = useState("");
   const [displacementFilter, setDisplacementFilter] = useState(null);
+  const [priceRange, setPriceRange] = useState([0, 10000]);
+
   const [priceFilter, setPriceFilter] = useState(null);
   const [vehicleRatingFilter, setVehicleRatingFilter] = useState(null);
   const [businessRatingFilter, setBusinessRatingFilter] = useState(null);
+  const [sortOrder, setSortOrder] = useState(null);
 
-  const clearFilters = () => {
-    setSearchText("");
-    setDisplacementFilter(null);
-    setPriceFilter(null);
-    setVehicleRatingFilter(null);
-    setBusinessRatingFilter(null);
-  };
+  const [allScooters, setAllScooters] = useState([]);
+  const [scooters, setScooters] = useState([]);
+
+  const [sortingVisible, setSortingVisible] = useState(false);
+  const [priceVisible, setPriceVisible] = useState(false);
 
   const applyFilters = () => {
     let filtered = [...allScooters];
@@ -132,15 +140,20 @@ const DashboardScreen = ({ route }) => {
     }
 
     // Sort by distance if specified
-    if (filters.sortOrder === "nearest") {
+    if (sortOrder === "nearest") {
       filtered.sort(
         (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity)
       );
-    } else if (filters.sortOrder === "farthest") {
+    } else if (sortOrder === "farthest") {
       filtered.sort((a, b) => (b.distance ?? 0) - (a.distance ?? 0));
     }
 
     setScooters(filtered);
+  };
+
+  const handleSortSelect = (option) => {
+    setSortOrder(option);
+    setSortingVisible(false);
   };
 
   // Function to fetch scooters from Firestore
@@ -342,6 +355,22 @@ const DashboardScreen = ({ route }) => {
 
   useEffect(() => {
     applyFilters();
+
+    if (vehicleRating) {
+      setVehicleRatingFilter(vehicleRating);
+    }
+
+    if (priceRangeFilter) {
+      setPriceFilter(priceRangeFilter);
+    }
+
+    if (businessRating) {
+      setBusinessRatingFilter(businessRating);
+    }
+
+    if (displacementRangeFilter) {
+      setDisplacementFilter(displacementRangeFilter);
+    }
   }, [
     allScooters,
     displacementFilter,
@@ -350,7 +379,7 @@ const DashboardScreen = ({ route }) => {
     businessRatingFilter,
     searchText,
     vehicleFilter,
-    filters.sortOrder,
+    sortOrder,
   ]);
 
   const renderStars = (rating) => {
@@ -409,103 +438,62 @@ const DashboardScreen = ({ route }) => {
         }
       >
         <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchBar}
-            placeholder="Search Scooter"
-            value={searchText}
-            onChangeText={setSearchText}
-            onSubmitEditing={applyFilters}
-          />
-          <TouchableOpacity onPress={applyFilters} style={styles.searchIcon}>
-            <Ionicons name="search" size={24} color="gray" />
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <TouchableOpacity
-              onPress={clearFilters}
-              style={styles.pickerWrapper}
-            >
-              <Text>Clear Filters</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <TextInput
+              style={styles.searchBar}
+              placeholder="Search Scooter"
+              value={searchText}
+              onChangeText={setSearchText}
+              onSubmitEditing={applyFilters}
+            />
+            <TouchableOpacity onPress={applyFilters} style={styles.searchIcon}>
+              <Ionicons name="search" size={24} color="gray" />
             </TouchableOpacity>
-
-            <View style={styles.pickerWrapper}>
-              <Picker
-                onValueChange={(value) => setDisplacementFilter(value)}
-                selectedValue={displacementFilter}
-                style={styles.pickerStyle}
-              >
-                <Picker.Item
-                  label="Select Displacement"
-                  value="Select Displacement"
-                />
-                <Picker.Item label="100cc - 150cc" value="100-150" />
-                <Picker.Item label="150cc - 200cc" value="150-200" />
-                <Picker.Item label="200cc - 300cc" value="200-300" />
-                <Picker.Item label="300cc - 500cc" value="300-500" />
-                <Picker.Item label="500cc - 1000cc" value="500-1000" />
-              </Picker>
-            </View>
-
-            <View style={styles.pickerWrapper}>
-              <Picker
-                onValueChange={(value) => setPriceFilter(value)}
-                selectedValue={priceFilter}
-                style={styles.pickerStyle}
-              >
-                <Picker.Item
-                  label="Select Price Range"
-                  value="Select Price Range"
-                />
-                <Picker.Item label="Less Than ₱300" value="0-300" />
-                <Picker.Item label="₱300 - ₱500" value="300-500" />
-                <Picker.Item label="₱500 - ₱700" value="500-700" />
-                <Picker.Item label="₱700 - ₱1000" value="700-1000" />
-                <Picker.Item
-                  label="Greater Than ₱1500"
-                  value="1500-999999999"
-                />
-              </Picker>
-            </View>
-
-            <View style={styles.pickerWrapper}>
-              <Picker
-                onValueChange={(value) => setVehicleRatingFilter(value)}
-                selectedValue={vehicleRatingFilter}
-                style={styles.pickerStyle}
-              >
-                <Picker.Item
-                  label="Select Vehicle Rating"
-                  value="Select Vehicle Rating"
-                />
-                <Picker.Item label="★" value="0-1" />
-                <Picker.Item label="★★" value="1-2" />
-                <Picker.Item label="★★★" value="2-3" />
-                <Picker.Item label="★★★★" value="3-4" />
-                <Picker.Item label="★★★★★" value="4-5" />
-              </Picker>
-            </View>
-
-            <View style={styles.pickerWrapper}>
-              <Picker
-                onValueChange={(value) => setBusinessRatingFilter(value)}
-                selectedValue={businessRatingFilter}
-                style={styles.pickerStyle}
-              >
-                <Picker.Item
-                  label="Select Business Rating"
-                  value="Select Business Rating"
-                />
-                <Picker.Item label="★" value="0-1" />
-                <Picker.Item label="★★" value="1-2" />
-                <Picker.Item label="★★★" value="2-3" />
-                <Picker.Item label="★★★★" value="3-4" />
-                <Picker.Item label="★★★★★" value="4-5" />
-              </Picker>
-            </View>
           </View>
-        </ScrollView>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                width: "33.33%",
+                alignItems: "center",
+              }}
+              onPress={() => {
+                navigation.navigate("DashboardFilter", { filters });
+              }}
+            >
+              <View style={{ flex: 1, flexDirection: "row", gap: 4 }}>
+                <Text style={{ textAlign: "center" }}>Filters</Text>
+                <Icon name="keyboard-arrow-down" size={20} color="gray" />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                width: "33.33%",
+                alignItems: "center",
+              }}
+              onPress={() => setPriceVisible(true)}
+            >
+              <View style={{ flex: 1, flexDirection: "row", gap: 4 }}>
+                <Text style={{ textAlign: "center" }}>Price</Text>
+                <Icon name="keyboard-arrow-down" size={20} color="gray" />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sortButton}
+              onPress={() => setSortingVisible(true)}
+            >
+              <View style={{ flexDirection: "row", gap: 4 }}>
+                <Text>Sorting</Text>
+                <Icon name="keyboard-arrow-down" size={20} color="gray" />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         <View style={styles.unitsContainer}>
           <Text style={styles.unitsTitle}>Available Units</Text>
@@ -646,6 +634,72 @@ const DashboardScreen = ({ route }) => {
           )}
         </View>
       </ScrollView>
+
+      <Modal
+        isVisible={sortingVisible}
+        onBackdropPress={() => setSortingVisible(false)}
+        style={styles.modal}
+      >
+        <View style={styles.sheet}>
+          <Text style={styles.title}>Sort by</Text>
+
+          <TouchableOpacity
+            onPress={() => handleSortSelect("nearest")}
+            style={styles.option}
+          >
+            <Text>Nearest</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleSortSelect("farthest")}
+            style={styles.option}
+          >
+            <Text>Farthest</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      <Modal
+        isVisible={priceVisible}
+        onBackdropPress={() => setPriceVisible(false)}
+        style={styles.modal}
+      >
+        <View style={styles.sheet}>
+          <View style={{ width: "100%", marginTop: -5 }}>
+            <Text style={{ fontFamily: "Inter-Semibold" }}>Price</Text>
+
+            <Text
+              style={{
+                fontFamily: "Inter-Regular",
+                color: "#333",
+                marginTop: 5,
+              }}
+            >
+              ₱{priceRange[0]} - ₱{priceRange[1]}
+            </Text>
+            <MultiSlider
+              values={priceRange}
+              onValuesChangeFinish={(values) => {
+                const priceRangeString = `${values[0]}-${values[1]}`;
+                setPriceRange(values);
+                setPriceFilter(priceRangeString);
+              }}
+              min={0}
+              max={10000}
+              step={100}
+              allowOverlap={false}
+              snapped
+              selectedStyle={{
+                backgroundColor: "#EF0000",
+              }}
+              markerStyle={{
+                height: 20,
+                width: 20,
+                backgroundColor: "#EF0000",
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -681,6 +735,30 @@ const styles = StyleSheet.create({
   textRating: {
     color: "#0047AB",
     fontWeight: "bold",
+  },
+
+  sortButton: {
+    width: "33.33%",
+    alignItems: "center",
+  },
+
+  modal: {
+    justifyContent: "flex-end",
+    margin: 0,
+  },
+  sheet: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  title: {
+    fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  option: {
+    paddingVertical: 10,
   },
 
   businessRating: {
@@ -719,13 +797,13 @@ const styles = StyleSheet.create({
   },
 
   searchContainer: {
-    justifyContent: "center",
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "col",
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
     marginBottom: 10,
+    backgroundColor: "white",
+    gap: 20,
   },
 
   searchBar: {
@@ -779,6 +857,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
     gap: 10,
+    paddingHorizontal: 5,
   },
 
   scooterCard: {
