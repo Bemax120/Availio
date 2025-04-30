@@ -18,18 +18,14 @@ const EnhancedFilterScreen = () => {
   const filters = route?.params?.filters || {};
 
   const locationAddress = route.params?.locationAddress || null;
-  const trimmedAddress = locationAddress
-    ? locationAddress.substring(locationAddress.lastIndexOf(",") + 1).trim()
-    : "";
 
   const locationFilter = route.params?.locationFilter || null;
   const startDate = route.params?.startDate;
   const endDate = route.params?.endDate;
   const pickUpTime = route.params?.pickUpTime;
   const returnTime = route.params?.returnTime;
-  const method = route.params?.method;
 
-  const [vehicleType, setVehicleType] = useState("All");
+  const [vehicleType, setVehicleType] = useState(null);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
@@ -240,7 +236,7 @@ const EnhancedFilterScreen = () => {
             onValueChange={(itemValue) => setVehicleType(itemValue)}
             style={styles.picker}
           >
-            <Picker.Item label="All Vehicles" value="All" />
+            <Picker.Item label="All Vehicles" value={null} />
             <Picker.Item label="2 Wheels" value="2 Wheels" />
             <Picker.Item label="4 Wheels" value="4 Wheels" />
           </Picker>

@@ -75,7 +75,7 @@ export default function InquireScreen({ route, navigation }) {
       const returnD = booking?.returnDate;
 
       const diffInHours = (returnD - pickup) / (1000 * 60 * 60);
-      setRentalDuration(`${Math.ceil(diffInHours / 24)} days`);
+      setRentalDuration(Math.ceil(diffInHours / 24));
     };
 
     calculateDuration();
@@ -166,7 +166,7 @@ export default function InquireScreen({ route, navigation }) {
                 style={[
                   styles.statusText,
                   {
-                    color: "black",
+                    color: "white",
                   },
                 ]}
               >
@@ -182,18 +182,6 @@ export default function InquireScreen({ route, navigation }) {
           </View>
 
           <View style={styles.detailContainer}>
-            {bookingStatus === "On-Going"}
-            <View style={styles.refundContainer}>
-              <View style={styles.refundItem}>
-                <Text style={styles.checkMark}>✅</Text>
-                <Text style={styles.refundText}>Can be refunded</Text>
-              </View>
-              <View style={styles.refundItem}>
-                <Text style={styles.crossMark}>❌</Text>
-                <Text style={styles.refundText}>Can't reschedule</Text>
-              </View>
-            </View>
-
             <View style={styles.tenantInfoContainer}>
               <Text style={styles.sectionTitle}>{motorcycle.businessName}</Text>
               <Text style={styles.tenantContact}>
@@ -217,7 +205,15 @@ export default function InquireScreen({ route, navigation }) {
 
             <View style={styles.infoRow}>
               <Text style={styles.label}>Rental Duration</Text>
-              <Text style={styles.value}>{rentalDuration}</Text>
+              <Text style={styles.value}>
+                {rentalDuration}
+                {rentalDuration === 1 ? " Day" : " Days"}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Mode of Payment</Text>
+              <Text style={styles.value}>{booking.mop || "On-Hand"}</Text>
             </View>
 
             {bookingStatus !== "Cancelled" &&
