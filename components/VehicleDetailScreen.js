@@ -14,7 +14,7 @@ const { width } = Dimensions.get("window");
 
 const VehicleDetailScreen = ({ route, navigation }) => {
   const filters = route?.params?.filters || {};
-  const { motorcycle, startDate, endDate, pickUpTime, returnTime, methodType } =
+  const { motorcycle, startDate, endDate, pickUpTime, returnTime } =
     route.params;
   const auth = getAuth();
 
@@ -59,7 +59,6 @@ const VehicleDetailScreen = ({ route, navigation }) => {
                   endDate,
                   pickUpTime,
                   returnTime,
-                  methodType,
                 })
               : navigation.navigate("Login", { filters });
           }}

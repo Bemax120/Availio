@@ -14,6 +14,9 @@ import {
 import { Timestamp, addDoc, doc, setDoc, collection } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
+import axios from "axios";
+import { Linking } from "react-native";
+
 const { width } = Dimensions.get("window");
 
 export default function ConfirmBooking({ route, navigation }) {
@@ -79,6 +82,7 @@ export default function ConfirmBooking({ route, navigation }) {
         vehicleId: motorcycle.id,
         bookingStatus: "Pending",
         rated: false,
+        mop: "On-Hand",
       };
 
       setLoading(true);
@@ -96,6 +100,83 @@ export default function ConfirmBooking({ route, navigation }) {
       console.error("ConfirmBooking Error:", error);
       setLoading(false);
       Alert.alert("Error", "Something went wrong. Try again.");
+    }
+  };
+
+  const handleOnlinePay = async () => {
+    if (!auth.currentUser) {
+      Alert.alert("Error", "You must be logged in to proceed.");
+      return;
+    }
+
+    setLoading(true);
+
+    const user = auth.currentUser;
+
+    const parsedPickup = parseAMPMToDate(startDate, pickUpTime);
+    const parsedReturn = parseAMPMToDate(endDate, returnTime);
+
+    const bookingData = {
+      createdAt: Timestamp.now(),
+      pickupDate: Timestamp.fromDate(parsedPickup),
+      returnDate: Timestamp.fromDate(parsedReturn),
+      renterId: user.uid,
+      totalPrice,
+      vehicleId: motorcycle.id,
+      bookingStatus: "Pending",
+      rated: false,
+      mop: "Online",
+    };
+
+    const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
+    const bookingId = bookingRef.id;
+
+    const userBookingRef = doc(db, "users", user.uid, "myBooking", bookingId);
+    await setDoc(userBookingRef, { bookingId });
+
+    const bookingDetails = {
+      motorcycleName: motorcycle.name,
+      motorcycleId: motorcycle.id,
+      startDate,
+      endDate,
+      bookingId: bookingId,
+    };
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        "https://scootergaming.vercel.app/api/checkout",
+        {
+          totalPrice,
+          user: {
+            uid: user.uid,
+            displayName: user.displayName,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+          },
+          bookingDetails,
+        }
+      );
+
+      const checkoutUrl = response.data?.data?.attributes?.checkout_url;
+
+      if (checkoutUrl) {
+        Linking.openURL(checkoutUrl);
+      } else {
+        Alert.alert(
+          "Error",
+          "Unable to start online payment. Please try again."
+        );
+      }
+
+      setLoading(false);
+      Alert.alert("Success", "Booking confirmed!");
+      navigation.navigate("Inquire", { bookingId, totalPrice, motorcycle });
+    } catch (error) {
+      console.error("OnlinePay Error:", error.response?.data || error.message);
+      Alert.alert("Error", "Failed to initiate payment.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,15 +216,16 @@ export default function ConfirmBooking({ route, navigation }) {
             <Text style={styles.label}>To: </Text>
             {formattedEnd} at {returnTime}
           </Text>
-          <Text style={styles.summaryText}>
-            <Text style={styles.label}>Method Type: </Text>
-            {methodType}
-          </Text>
+
           <Text style={styles.totalPriceText}>Total: ₱{totalPrice}</Text>
         </View>
 
+        <TouchableOpacity style={styles.onlineButton} onPress={handleOnlinePay}>
+          <Text style={styles.onlinebtnText}>Pay Online</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.button} onPress={handleConfirmBooking}>
-          <Text style={styles.buttonText}>Confirm Booking</Text>
+          <Text style={styles.buttonText}>Pay On Hand</Text>
         </TouchableOpacity>
       </View>
 
@@ -216,8 +298,19 @@ const styles = StyleSheet.create({
     color: "#D70040",
   },
 
+  onlineButton: {
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#D3D3D3",
+    borderRadius: 5,
+  },
+
   button: {
-    backgroundColor: "#D70040",
+    backgroundColor: "#EF0000",
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",
@@ -226,6 +319,12 @@ const styles = StyleSheet.create({
 
   buttonText: {
     color: "white",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+
+  onlinebtnText: {
+    color: "#EF0000",
     fontWeight: "600",
     fontSize: 16,
   },
