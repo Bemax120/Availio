@@ -8,15 +8,14 @@ import {
   BackHandler,
   Image,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
-import { getAuth } from "firebase/auth";
 import { useFocusEffect } from "@react-navigation/native";
 
 export default function InquireScreen({ route, navigation }) {
   const { bookingId, totalPrice, motorcycle } = route.params;
-  const auth = getAuth();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState("");
@@ -118,9 +117,9 @@ export default function InquireScreen({ route, navigation }) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <Text>Loading booking details...</Text>
-      </SafeAreaView>
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#4b6584" />
+      </View>
     );
   }
 
@@ -244,7 +243,7 @@ export default function InquireScreen({ route, navigation }) {
                   navigation.navigate("Chat", {
                     bookingNumber: booking.id,
                     itemName: motorcycle.name,
-                    vendorName: "Scooter Gaming PH",
+                    businessName: motorcycle.businessName,
                   });
                 }}
               >
@@ -270,6 +269,7 @@ export default function InquireScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
+  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   safeArea: {
     flex: 1,
     paddingBottom: 60,
