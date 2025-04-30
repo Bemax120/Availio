@@ -23,15 +23,13 @@ const EnhancedFilterScreen = () => {
     : "";
 
   const locationFilter = route.params?.locationFilter || null;
-  const vehicleType = route.params?.vehicleType || null;
   const startDate = route.params?.startDate;
   const endDate = route.params?.endDate;
   const pickUpTime = route.params?.pickUpTime;
   const returnTime = route.params?.returnTime;
   const method = route.params?.method;
 
-  const [sortOrder, setSortOrder] = useState("none");
-  const [methodType, setMethodType] = useState("none");
+  const [vehicleType, setVehicleType] = useState("All");
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
@@ -51,19 +49,13 @@ const EnhancedFilterScreen = () => {
       vehicleType,
       locationAddress,
       locationFilter,
-      sortOrder,
       startDate,
       endDate,
       pickUpTime,
       returnTime,
-      methodType,
     };
     if (!startDate || !endDate || !pickUpTime || !returnTime) {
       Alert.alert("No Booking Date", "Please Select A Booking Date!");
-      return;
-    }
-    if (!methodType) {
-      Alert.alert("No Method Type", "Please Select A Method Type!");
       return;
     }
     navigation.replace("HomeTabs", { filters });
@@ -91,18 +83,16 @@ const EnhancedFilterScreen = () => {
         end={{ x: 0.5, y: 1 }}
         style={styles.headerContainer}
       >
-        <TouchableOpacity
+        <Text
           style={{
-            flexDirection: "row",
-            gap: 12,
+            fontSize: 20,
+            fontFamily: "Inter-Semibold",
+            marginTop: 10,
           }}
-          onPress={() => navigation.navigate("Landing")}
         >
-          <Ionicons name="arrow-back" size={30} color="black" />
-          <Text style={{ fontSize: 20, fontFamily: "Inter-Semibold" }}>
-            All {vehicleType}
-          </Text>
-        </TouchableOpacity>
+          Preference
+        </Text>
+
         {vehicleType === "2 Wheels" ? (
           <MaterialIcons
             style={{ position: "absolute", bottom: 30, right: 25 }}
@@ -161,7 +151,7 @@ const EnhancedFilterScreen = () => {
               <Text style={styles.mapButtonText}>Near Me</Text>
             )}
             {locationAddress && (
-              <Text style={{ maxWidth: 200, color: "#1e293b" }}>
+              <Text style={{ maxWidth: 400, color: "#1e293b" }}>
                 ({locationAddress})
               </Text>
             )}
@@ -246,34 +236,13 @@ const EnhancedFilterScreen = () => {
           }}
         >
           <Picker
-            selectedValue={sortOrder}
-            onValueChange={(itemValue) => setSortOrder(itemValue)}
+            selectedValue={vehicleType}
+            onValueChange={(itemValue) => setVehicleType(itemValue)}
             style={styles.picker}
           >
-            <Picker.Item label="No Sorting" value="none" />
-            <Picker.Item label="Nearest First" value="nearest" />
-            <Picker.Item label="Farthest First" value="farthest" />
-          </Picker>
-        </View>
-
-        <View
-          style={{
-            flexDirection: "row",
-            backgroundColor: "#ECECEC",
-            paddingHorizontal: 16,
-            borderRadius: 100,
-            gap: 5,
-            marginBottom: 20,
-            alignItems: "center",
-          }}
-        >
-          <Picker
-            selectedValue={methodType}
-            onValueChange={(itemValue) => setMethodType(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Delivery" value="Delivery" />
-            <Picker.Item label="Pickup" value="Pickup" />
+            <Picker.Item label="All Vehicles" value="All" />
+            <Picker.Item label="2 Wheels" value="2 Wheels" />
+            <Picker.Item label="4 Wheels" value="4 Wheels" />
           </Picker>
         </View>
 

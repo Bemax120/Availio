@@ -29,6 +29,7 @@ import "react-native-get-random-values";
 import Toast from "react-native-toast-message";
 import * as SplashScreen from "expo-splash-screen";
 import { LogBox } from "react-native";
+import FilterScreen from "./components/FilterScreen";
 LogBox.ignoreAllLogs(); // temporarily if needed
 
 const Stack = createNativeStackNavigator();
@@ -37,7 +38,7 @@ SplashScreen.preventAutoHideAsync();
 
 function HomeTabs({ route }) {
   const filters = route?.params?.filters || null;
-
+  const dashboardFilters = route?.params?.dashboardFilters || null;
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -61,24 +62,24 @@ function HomeTabs({ route }) {
       <Tab.Screen
         name="Home"
         options={{ headerShown: false }}
-        initialParams={{ filters }}
+        initialParams={{ filters, dashboardFilters }}
         component={DashboardScreen}
       />
       <Tab.Screen
         options={{ headerShown: false }}
-        initialParams={{ filters }}
+        initialParams={{ filters, dashboardFilters }}
         name="Favorite"
         component={MotorcycleFavoritesScreen}
       />
       <Tab.Screen
         options={{ headerShown: false }}
-        initialParams={{ filters }}
+        initialParams={{ filters, dashboardFilters }}
         name="Book"
         component={MotorcycleBookScreen}
       />
       <Tab.Screen
         options={{ headerShown: false }}
-        initialParams={{ filters }}
+        initialParams={{ filters, dashboardFilters }}
         name="Account"
         component={ProfilePage}
       />
@@ -105,12 +106,12 @@ const App = () => {
 
   return (
     <NavigationContainer onReady={onLayoutRootView}>
-      <Stack.Navigator initialRouteName="Landing">
-        <Stack.Screen
+      <Stack.Navigator initialRouteName="Filter">
+        {/* <Stack.Screen
           name="Landing"
           component={LandingScreen}
           options={{ headerShown: false }}
-        />
+        /> */}
         <Stack.Screen
           name="Login"
           component={LoginScreen}
@@ -126,6 +127,11 @@ const App = () => {
           name="MapBusinessScreen"
           options={{ headerShown: false }}
           component={MapBusinessScreen}
+        />
+        <Stack.Screen
+          name="DashboardFilter"
+          component={FilterScreen}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Filter"

@@ -12,10 +12,8 @@ import {
 } from "react-native";
 import * as Location from "expo-location";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import MapView, { Marker, Callout } from "react-native-maps";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
-import { Ionicons } from "@expo/vector-icons";
+import MapView from "react-native-maps";
+
 const screen = Dimensions.get("window");
 
 const MapPinScreen = () => {
@@ -32,7 +30,6 @@ const MapPinScreen = () => {
   const [centerLocation, setCenterLocation] = useState(null);
   const [address, setAddress] = useState(null);
   const [loadingAddress, setLoadingAddress] = useState(false);
-  const [userMarkers, setUserMarkers] = useState([]);
   const mapRef = useRef(null);
   const [searchText, setSearchText] = useState("");
 
@@ -219,7 +216,7 @@ const styles = StyleSheet.create({
     width: "90%",
     alignSelf: "center",
     zIndex: 999,
-    backgroundColor: "#FCFBF4",
+    backgroundColor: "#FFFFFF",
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 4,
