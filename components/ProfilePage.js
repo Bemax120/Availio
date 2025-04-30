@@ -13,11 +13,12 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-import * as ImagePicker from "expo-image-picker";
 import { getAuth, signOut } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase/firebaseConfig";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
 
 const defaultProfileImage = require("../assets/download.png");
 
@@ -70,15 +71,12 @@ const ProfilePage = ({ route }) => {
     fetchUserData();
   }, []);
 
-  const uploadImage = async (folder, setter) => {
+  const uploadImage = async (folder) => {
     try {
       const permission =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert(
-          "Permission Denied",
-          "You need to grant access to upload images."
-        );
+        Alert.alert("Permission Denied", "Grant access to upload images.");
         return;
       }
 
@@ -87,32 +85,34 @@ const ProfilePage = ({ route }) => {
         allowsEditing: true,
       });
 
-      if (result.canceled) {
+      if (result.canceled) return;
+
+      const imageUri = result.assets[0].uri;
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+        Alert.alert("Error", "You must be logged in.");
         return;
       }
 
-      const imageUri = result.assets[0].uri;
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
+      const base64Data = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
 
-      const uid = auth.currentUser.uid;
+      const imageRef = ref(
+        storage,
+        folder === "profile_pictures"
+          ? `profile_pictures/personal/${userId}`
+          : `verification_docs/${userId}`
+      );
 
-      let imageRef = null;
-      if (folder === "profile_pictures") {
-        const fileName = uid;
-        imageRef = ref(storage, `profile_pictures/personal/${fileName}`);
-      } else {
-        const fileName = "valid_id.jpg";
-        imageRef = ref(storage, `verification_docs/${uid}/${fileName}`);
-      }
+      await uploadString(imageRef, base64Data, "base64");
 
-      await uploadBytes(imageRef, blob);
       const downloadURL = await getDownloadURL(imageRef);
 
       const fieldName =
         folder === "profile_pictures" ? "profilePicture" : "verificationDoc";
 
-      await updateDoc(doc(db, "users", uid), {
+      await updateDoc(doc(db, "users", userId), {
         [fieldName]: downloadURL,
       });
 
@@ -222,10 +222,10 @@ const ProfilePage = ({ route }) => {
       </View>
 
       <TouchableOpacity
-        style={[styles.uploadButton, { backgroundColor: "#007AFF" }]}
+        style={[styles.uploadButton, { backgroundColor: "#FFFFFF" }]}
         onPress={() => uploadImage("verification_docs")}
       >
-        <Text style={styles.logoutButtonText}>Upload Valid ID</Text>
+        <Text style={styles.uploadButtonText}>Upload Valid ID</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   uploadText: {
-    color: "#007AFF",
+    color: "#EF0000",
     marginTop: 5,
     fontSize: 12,
     textAlign: "center",
@@ -310,9 +310,12 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
+    borderColor: "#D3D3D3",
+    backgroundColor: "white",
+    borderRadius: 5,
   },
   logoutButton: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: "#EF0000",
     margin: 20,
     padding: 16,
     borderRadius: 12,
@@ -323,6 +326,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  uploadButtonText: { color: "#EF0000", fontSize: 16, fontWeight: "600" },
   logoutButtonText: { color: "white", fontSize: 16, fontWeight: "600" },
 });
 
