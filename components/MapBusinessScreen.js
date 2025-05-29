@@ -16,7 +16,8 @@ import MapView, { Marker, Callout } from "react-native-maps";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
-const screen = Dimensions.get("window");
+
+const screen = Dimensions.get("window").width;
 
 const MapBusinessScreen = () => {
   const route = useRoute();
@@ -49,8 +50,8 @@ const MapBusinessScreen = () => {
     }
 
     debounceTimeout.current = setTimeout(() => {
-      handleManualSearch(); // Perform geocoding fallback
-    }, 1000); // 1 second debounce
+      handleManualSearch(); 
+    }, 1000); 
   }, [searchText]);
 
   useEffect(() => {
@@ -201,7 +202,7 @@ const MapBusinessScreen = () => {
       {location && (
         <MapView
           ref={mapRef}
-          style={{ flex: 1 }}
+          style={StyleSheet.absoluteFillObject}
           initialRegion={location}
           onRegionChangeComplete={handleRegionChangeComplete}
         >
@@ -213,30 +214,59 @@ const MapBusinessScreen = () => {
                 longitude: user.businessCoordinates.longitude,
               }}
               title={user.businessAddress}
+              anchor={{ x: 0.5, y: 1 }}
             >
-              <View
-                style={{
-                  backgroundColor: "#fff",
-                  padding: 4,
-                  borderRadius: 35,
-                  borderWidth: 1,
-                  borderColor: "#ccc",
-                  elevation: 5,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 3,
-                }}
-              >
-                <Image
-                  source={{ uri: user.businessProfile }}
+              <View style={{
+                alignItems: "center",
+              }}>
+                <View
                   style={{
-                    width: 25,
-                    height: 25,
-                    borderRadius: 50,
+                    backgroundColor: "#fff",
+                    paddingHorizontal: 5,
+                    paddingVertical: 2,
+                    borderRadius: 5,
+                    marginBottom: 0,
+                    elevation: 1,
                   }}
-                />
+                >
+                  <Text
+                    style={{
+                      fontSize: 5,
+                      fontWeight: "bold",
+                      color: "#333",
+                      maxWidth: 500,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {user.businessName}
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    backgroundColor: "#fff",
+                    padding: 1,
+                    borderRadius: 30,
+                    borderWidth: 1,
+                    borderColor: "#ccc",
+                    elevation: 5,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                  }}
+                >
+                  <Image
+                    source={{ uri: user.businessProfile }}
+                    style={{
+                      width: 17,
+                      height: 17,
+                      borderRadius: 20,
+                    }}
+                  />
+                </View>
               </View>
+              
               <Callout tooltip>
                 <View
                   style={{

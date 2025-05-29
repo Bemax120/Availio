@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback, useContext } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,15 @@ import {
   StyleSheet,
   Alert,
   Image,
-  Dimensions,
   ActivityIndicator,
-  TextInput,
+  Dimensions,
 } from "react-native";
-import * as Location from "expo-location";
-import { useNavigation, useRoute } from "@react-navigation/native";
 import MapView from "react-native-maps";
+import * as Location from "expo-location";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
+import debounce from "lodash.debounce"; 
+import { MapContext } from "../context/MapContext";
 
 const screen = Dimensions.get("window");
 
@@ -20,35 +22,77 @@ const MapPinScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
 
-  const vehicleType = route.params?.vehicleType || null;
-  const startDate = route.params?.startDate;
-  const endDate = route.params?.endDate;
-  const pickUpTime = route.params?.pickUpTime;
-  const returnTime = route.params?.returnTime;
+  const { vehicleType, startDate, endDate, pickUpTime, returnTime } = route.params || {};
 
-  const [location, setLocation] = useState(null);
   const [centerLocation, setCenterLocation] = useState(null);
-  const [address, setAddress] = useState(null);
   const [loadingAddress, setLoadingAddress] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+  const [locating, setLocating] = useState(false);
   const mapRef = useRef(null);
-  const [searchText, setSearchText] = useState("");
+  const initialLocationRef = useRef(null);
 
-  const debounceTimeout = useRef(null);
+  const { initialLocation, setInitialLocation, address, setAddress } = useContext(MapContext);
+  const [location, setLocation] = useState(initialLocation);
 
-  useEffect(() => {
-    if (!searchText.trim()) return;
+  useFocusEffect(
+    useCallback(() => {
+      const fetchAndCenterLocation = async () => {
+        try {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status !== "granted") {
+            Alert.alert("Permission denied to access location");
+            return;
+          }
 
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-    }
+          const currentLocation = await Location.getCurrentPositionAsync({});
+          const region = {
+            latitude: currentLocation.coords.latitude,
+            longitude: currentLocation.coords.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          };
 
-    debounceTimeout.current = setTimeout(() => {
-      handleManualSearch(); // Perform geocoding fallback
-    }, 1000); // 1 second debounce
-  }, [searchText]);
+          // Update all references and state
+          setInitialLocation(region);
+          initialLocationRef.current = region;
+          setLocation(region);
+          setCenterLocation({ latitude: region.latitude, longitude: region.longitude });
 
-  useEffect(() => {
-    (async () => {
+          // Center the map
+          if (mapRef.current) {
+            mapRef.current.animateToRegion(region, 1000);
+          }
+
+          fetchAddress(region.latitude, region.longitude);
+        } catch (err) {
+          console.error("Error fetching current location:", err);
+        }
+      };
+
+      fetchAndCenterLocation();
+    }, [])
+  );
+
+  const fetchAddress = useCallback(
+    debounce(async (latitude, longitude) => {
+      try {
+        setLoadingAddress(true);
+        const [geo] = await Location.reverseGeocodeAsync({ latitude, longitude });
+        const formatted = `${geo?.name || ""} ${geo?.street || ""}, ${geo?.city || ""}, ${geo?.region || ""}`;
+        setAddress(formatted);
+      } catch (err) {
+        console.error("Failed to get address:", err);
+        setAddress("Unable to retrieve address");
+      } finally {
+        setLoadingAddress(false);
+      }
+    }, 800),
+    []
+  );
+
+  const goToCurrentLocation = async () => {
+    try {
+      setLocating(true);
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("Permission denied to access location");
@@ -62,78 +106,22 @@ const MapPinScreen = () => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       };
-      setLocation(region);
-      setCenterLocation({
-        latitude: region.latitude,
-        longitude: region.longitude,
-      });
 
-      fetchAddress(region.latitude, region.longitude);
-    })();
-  }, []);
-
-  const handleManualSearch = async () => {
-    if (!searchText.trim()) return;
-
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-          searchText
-        )}&format=json&limit=1`,
-        {
-          headers: {
-            "User-Agent": "Availio/1.0 (kennethrex456@gmail.com)", // Replace with your app/email
-            "Accept-Language": "en",
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.length > 0) {
-        const result = data[0];
-        const lat = parseFloat(result.lat);
-        const lon = parseFloat(result.lon);
-
-        const newRegion = {
-          latitude: lat,
-          longitude: lon,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        };
-
-        setLocation(newRegion);
-        setCenterLocation({ latitude: lat, longitude: lon });
-
-        if (mapRef.current) {
-          mapRef.current.animateToRegion(newRegion, 1000);
-        }
-
-        fetchAddress(lat, lon);
-      } else {
-        Alert.alert("Location not found", "Try a more specific query.");
+      if (mapRef.current) {
+        mapRef.current.animateToRegion(region, 1000);
       }
-    } catch (error) {
-      console.error("Nominatim search failed:", error);
-      Alert.alert("Search error", "Something went wrong while searching.");
+
+      setCenterLocation({ latitude: region.latitude, longitude: region.longitude });
+      fetchAddress(region.latitude, region.longitude);
+    } catch (err) {
+      console.error("Error getting current location", err);
+    } finally {
+      setLocating(false);
     }
   };
 
-  const fetchAddress = async (latitude, longitude) => {
-    try {
-      setLoadingAddress(true);
-      const [geo] = await Location.reverseGeocodeAsync({ latitude, longitude });
-      const formatted = `${geo?.name || ""} ${geo?.street || ""}, ${
-        geo?.city || ""
-      }, ${geo?.region || ""}`;
-      setAddress(formatted);
-    } catch (err) {
-      console.error("Failed to get address:", err);
-      setAddress("Unable to retrieve address");
-    } finally {
-      setLoadingAddress(false);
-    }
-  };
+
+
 
   const handleRegionChangeComplete = (region) => {
     const coords = {
@@ -163,31 +151,82 @@ const MapPinScreen = () => {
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.searchContainer}>
-        <View style={styles.searchBox}>
-          <TextInput
-            placeholder="Search for a location"
-            value={searchText}
-            onChangeText={setSearchText}
-            style={styles.textInput}
-          />
-        </View>
-      </View>
-
-      {location && (
-        <MapView
-          ref={mapRef}
-          style={{ flex: 1 }}
-          initialRegion={location}
-          onRegionChangeComplete={handleRegionChangeComplete}
-        ></MapView>
-      )}
-
-      <View style={styles.markerFixed}>
-        <Image
-          source={require("../assets/location.png")}
-          style={{ width: 40, height: 40 }}
+        <GooglePlacesAutocomplete
+          placeholder="Search for a location..."
+          fetchDetails={true}
+          onPress={(data, details = null) => {
+            const newRegion = {
+              latitude: details.geometry.location.lat,
+              longitude: details.geometry.location.lng,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            };
+            setLocation(newRegion);
+            setCenterLocation({
+              latitude: newRegion.latitude,
+              longitude: newRegion.longitude,
+            });
+            if (mapRef.current) {
+              mapRef.current.animateToRegion(newRegion, 1000);
+            }
+            fetchAddress(newRegion.latitude, newRegion.longitude);
+          }}
+          query={{
+            key: "AIzaSyDuMcil6MODKv7AVdkY2AXM4X-uWsyIZO0",
+            language: "en",
+            components: "country:ph",
+          }}
+          styles={{
+            textInputContainer: {
+              backgroundColor: "white",
+              borderRadius: 8,
+              width: "100%",
+            },
+            textInput: {
+              height: 44,
+              color: "#5d5d5d",
+              fontSize: 16,
+            },
+            listView: {
+              backgroundColor: "white",
+              borderRadius: 8,
+              marginTop: 8,
+              elevation: 3,
+            },
+          }}
+          debounce={300}
+          enablePoweredByContainer={false}
         />
       </View>
+
+      {location ? (
+        <MapView
+          ref={mapRef}
+          style={{ flex: 1   }}
+          initialRegion={location}
+          onRegionChangeComplete={handleRegionChangeComplete}
+          onMapReady={() => setMapReady(true)}
+          showsUserLocation
+          showsMyLocationButton={false}
+        />
+      ) : (
+        <ActivityIndicator style={{ flex: 1 }} size="large" color="#000" />
+      )}
+
+
+      <View style={styles.markerFixed}>
+        <Image source={require("../assets/location.png")} style={{ width: 40, height: 40 }} />
+      </View>
+
+      <View style={styles.currentLocationWrapper}>
+          <TouchableOpacity onPress={goToCurrentLocation} style={styles.currentLocationButton}>
+            <Image
+              source={require('../assets/gps-icon.png')} // use your own icon
+              style={{ width: 24, height: 24 }}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
 
       <View style={styles.addressContainer}>
         {loadingAddress ? (
@@ -199,10 +238,7 @@ const MapPinScreen = () => {
         )}
       </View>
 
-      <TouchableOpacity
-        style={styles.confirmButton}
-        onPress={handleConfirmLocation}
-      >
+      <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmLocation}>
         <Text style={styles.confirmButtonText}>Confirm Location</Text>
       </TouchableOpacity>
     </View>
@@ -210,24 +246,61 @@ const MapPinScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  searchBox: {
-    position: "absolute",
-    top: 10,
-    width: "90%",
-    alignSelf: "center",
-    zIndex: 999,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    flexDirection: "row",
-    alignItems: "center",
+  container: {
+    flex: 1,
   },
+
+  currentLocationWrapper: {
+    position: 'absolute',
+    bottom: 140, // adjust as needed
+    right: 20,
+    zIndex: 10,
+  },
+  currentLocationButton: {
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 30,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+
+  searchContainer: {
+    position: 'absolute',
+    width: '90%',
+    backgroundColor: 'white',
+    shadowColor: 'black',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 4,
+    padding: 8,
+    borderRadius: 8,
+    top: 10,
+    alignSelf: 'center',
+    zIndex: 1,
+  },
+  searchInput: {
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  suggestionsContainer: {
+    backgroundColor: 'white',
+    borderRadius: 5,
+    marginTop: 5,
+    maxHeight: 200,
+  },
+  suggestionItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  
   textInput: {
     fontSize: 16,
   },

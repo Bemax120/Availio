@@ -50,10 +50,20 @@ const EnhancedFilterScreen = () => {
       pickUpTime,
       returnTime,
     };
-    if (!startDate || !endDate || !pickUpTime || !returnTime) {
-      Alert.alert("No Booking Date", "Please Select A Booking Date!");
-      return;
-    }
+
+    if(locationAddress == "Near Me" ||locationAddress == null ){
+        Alert.alert("Address is empty", "Please Select A Location!");
+        return;
+      }else{
+        
+        if (!startDate || !endDate || !pickUpTime || !returnTime) {
+          Alert.alert("No Booking Date", "Please Select A Booking Date!");
+          return;
+          Alert.alert("Address is empty", "Please Select A Location!");
+        return;
+         }
+      }
+    
     navigation.replace("HomeTabs", { filters });
   };
 
@@ -144,7 +154,7 @@ const EnhancedFilterScreen = () => {
           >
             <Ionicons name="search" size={20} color="gray" />
             {locationAddress ? null : (
-              <Text style={styles.mapButtonText}>Near Me</Text>
+              <Text style={styles.mapButtonText}>Select location</Text>
             )}
             {locationAddress && (
               <Text style={{ maxWidth: 400, color: "#1e293b" }}>

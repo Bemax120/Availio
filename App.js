@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -30,6 +30,8 @@ import Toast from "react-native-toast-message";
 import * as SplashScreen from "expo-splash-screen";
 import { LogBox } from "react-native";
 import FilterScreen from "./components/FilterScreen";
+import { MapProvider } from "./context/MapContext";
+LogBox.ignoreAllLogs();
 import MessagesListScreen from "./components/MessagesListScreen";
 LogBox.ignoreAllLogs(); // temporarily if needed
 
@@ -117,97 +119,94 @@ const App = () => {
   }
 
   return (
-    <NavigationContainer onReady={onLayoutRootView}>
-      <Stack.Navigator initialRouteName="Filter">
-        {/* <Stack.Screen
-          name="Landing"
-          component={LandingScreen}
-          options={{ headerShown: false }}
-        /> */}
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen
-          name="MapPinScreen"
-          options={{ headerShown: false }}
-          component={MapPinScreen}
-        />
-        <Stack.Screen
-          name="MapBusinessScreen"
-          options={{ headerShown: false }}
-          component={MapBusinessScreen}
-        />
-        <Stack.Screen
-          name="DashboardFilter"
-          component={FilterScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Filter"
-          component={EnhancedFilterScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="HomeTabs"
-          component={HomeTabs}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="MotorcycleList"
-          component={MotorcycleListScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ConfirmBooking"
-          options={{ headerShown: false }}
-          component={ConfirmBookingScreen}
-        />
-        <Stack.Screen
-          name="VehicleDetail"
-          options={{ headerShown: false }}
-          component={VehicleDetailScreen}
-        />
-        <Stack.Screen
-          name="DateTimePicker"
-          options={{ headerShown: false }}
-          component={DateTimePickerScreen}
-        />
-        <Stack.Screen
-          name="Rating"
-          options={{ headerShown: false }}
-          component={RatingScreen}
-        />
-        <Stack.Screen
-          name="Payment"
-          options={{ headerShown: false }}
-          component={PaymentScreen}
-        />
-        <Stack.Screen
-          name="PaymentDetails"
-          options={{ headerShown: false }}
-          component={PaymentDetailsScreen}
-        />
-        <Stack.Screen
-          name="PaymentSuccess"
-          options={{ headerShown: false }}
-          component={PaymentSuccessScreen}
-        />
-        <Stack.Screen
-          name="Inquire"
-          component={InquireScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Chat"
-          component={ChatScreen}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-      <Toast />
-    </NavigationContainer>
+    <MapProvider>
+      <NavigationContainer onReady={onLayoutRootView}>
+        <Stack.Navigator initialRouteName="Filter">
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen
+            name="MapPinScreen"
+            options={{ headerShown: false }}
+            component={MapPinScreen}
+          />
+          <Stack.Screen
+            name="MapBusinessScreen"
+            options={{ headerShown: false }}
+            component={MapBusinessScreen}
+          />
+          <Stack.Screen
+            name="DashboardFilter"
+            component={FilterScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Filter"
+            component={EnhancedFilterScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="HomeTabs"
+            component={HomeTabs}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="MotorcycleList"
+            component={MotorcycleListScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ConfirmBooking"
+            options={{ headerShown: false }}
+            component={ConfirmBookingScreen}
+          />
+          <Stack.Screen
+            name="VehicleDetail"
+            options={{ headerShown: false }}
+            component={VehicleDetailScreen}
+          />
+          <Stack.Screen
+            name="DateTimePicker"
+            options={{ headerShown: false }}
+            component={DateTimePickerScreen}
+          />
+          <Stack.Screen
+            name="Rating"
+            options={{ headerShown: false }}
+            component={RatingScreen}
+          />
+          <Stack.Screen
+            name="Payment"
+            options={{ headerShown: false }}
+            component={PaymentScreen}
+          />
+          <Stack.Screen
+            name="PaymentDetails"
+            options={{ headerShown: false }}
+            component={PaymentDetailsScreen}
+          />
+          <Stack.Screen
+            name="PaymentSuccess"
+            options={{ headerShown: false }}
+            component={PaymentSuccessScreen}
+          />
+          <Stack.Screen
+            name="Inquire"
+            component={InquireScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Chat"
+            component={ChatScreen}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+        <Toast />
+      </NavigationContainer>
+    </MapProvider>
   );
 };
 
