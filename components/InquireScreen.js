@@ -9,6 +9,7 @@ import {
   Image,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
@@ -22,6 +23,7 @@ export default function InquireScreen({ route, navigation }) {
   const [motorcycleName, setMotorcycleName] = useState("");
   const [bookingStatus, setBookingStatus] = useState("");
   const [rentalDuration, setRentalDuration] = useState("");
+  const [rentalOfficeId, setRentalOfficeId] = useState(null);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -42,6 +44,7 @@ export default function InquireScreen({ route, navigation }) {
 
           if (vehicleSnap.exists()) {
             setMotorcycleName(vehicleSnap.data().name);
+            setRentalOfficeId(vehicleSnap.data().ownerId);
           }
         } else {
           console.error("Booking not found");
@@ -130,6 +133,20 @@ export default function InquireScreen({ route, navigation }) {
       </SafeAreaView>
     );
   }
+
+  const handleContact = () => {
+    if (!rentalOfficeId) {
+      console.error("InquireScreen: missing rentalOfficeId", rentalOfficeId);
+      return Alert.alert(
+        "Cannot Contact",
+        "Rental office ID is unavailable. Please try again later."
+      );
+    }
+    navigation.navigate("Chat", {
+      otherUserId: rentalOfficeId,
+      businessName: motorcycle.businessName,
+    });
+  };
 
   return (
     <ScrollView style={{ paddingTop: 60, backgroundColor: "#FCFBF4" }}>
@@ -239,13 +256,7 @@ export default function InquireScreen({ route, navigation }) {
             {bookingStatus !== "Cancelled" && (
               <TouchableOpacity
                 style={styles.primaryButton}
-                onPress={() => {
-                  navigation.navigate("Chat", {
-                    bookingNumber: booking.id,
-                    itemName: motorcycle.name,
-                    businessName: motorcycle.businessName,
-                  });
-                }}
+                onPress={handleContact}
               >
                 <Text style={styles.primaryButtonText}>
                   Contact the Rental Office
