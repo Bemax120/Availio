@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Image,
   View,
@@ -8,6 +8,8 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  BackHandler,
+  ToastAndroid,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -21,7 +23,7 @@ import {
 } from "firebase/firestore";
 import { SocialIcon } from "react-native-elements";
 import { auth, db } from "../firebase/firebaseConfig";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute, useFocusEffect  } from "@react-navigation/native";
 
 const defaultProfileImage = require("../assets/download.png");
 const Availio = require("../assets/Availio.png");
@@ -50,6 +52,23 @@ const LoginScreen = () => {
       return null;
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        ToastAndroid.show("Please continue as a Guest to continue", ToastAndroid.SHORT);
+        return true; // prevent default back behavior
+      };
+
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress
+      );
+
+      return () => backHandler.remove();
+    }, [])
+  );
+
 
   const handleLogin = async () => {
     if (!identifier.trim() || !password.trim()) {
@@ -97,6 +116,8 @@ const LoginScreen = () => {
         };
 
         await AsyncStorage.setItem("userData", JSON.stringify(finalUserData));
+        Alert.alert("Success", `Welcome, ${finalUserData.firstName}!`);
+        setIsLoggedIn(true); // <-- set global login state
 
         Alert.alert("Success", `Welcome, ${finalUserData.firstName}!`);
         navigation.navigate("HomeTabs", {

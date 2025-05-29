@@ -2,8 +2,8 @@ import "dotenv/config";
 
 export default {
   expo: {
-    name: "ScooterGamingApp",
-    slug: "ScooterGamingApp",
+    name: "Availio",
+    slug: "Availio",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
@@ -27,7 +27,7 @@ export default {
           apiKey: process.env.GOOGLE_MAPS_API_KEY,
         },
       },
-      package: "com.bemax159.ScooterGamingApp",
+      package: "com.bemax159.Availio",
     },
     web: {
       favicon: "./assets/favicon.png",
