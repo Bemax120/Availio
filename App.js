@@ -30,6 +30,7 @@ import Toast from "react-native-toast-message";
 import * as SplashScreen from "expo-splash-screen";
 import { LogBox } from "react-native";
 import FilterScreen from "./components/FilterScreen";
+import MessagesListScreen from "./components/MessagesListScreen";
 LogBox.ignoreAllLogs(); // temporarily if needed
 
 const Stack = createNativeStackNavigator();
@@ -39,19 +40,29 @@ SplashScreen.preventAutoHideAsync();
 function HomeTabs({ route }) {
   const filters = route?.params?.filters || null;
   const dashboardFilters = route?.params?.dashboardFilters || null;
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        headerShown: false,
         tabBarIcon: ({ color, size }) => {
           let iconName;
-          if (route.name === "Home") {
-            iconName = "home";
-          } else if (route.name === "Favorite") {
-            iconName = "heart";
-          } else if (route.name === "Book") {
-            iconName = "book";
-          } else if (route.name === "Account") {
-            iconName = "person";
+          switch (route.name) {
+            case "Home":
+              iconName = "home";
+              break;
+            case "Messages":
+              iconName = "chatbubble";
+              break;
+            case "Favorite":
+              iconName = "heart";
+              break;
+            case "Book":
+              iconName = "book";
+              break;
+            case "Account":
+              iconName = "person";
+              break;
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -61,27 +72,28 @@ function HomeTabs({ route }) {
     >
       <Tab.Screen
         name="Home"
-        options={{ headerShown: false }}
-        initialParams={{ filters, dashboardFilters }}
         component={DashboardScreen}
+        initialParams={{ filters, dashboardFilters }}
       />
       <Tab.Screen
-        options={{ headerShown: false }}
-        initialParams={{ filters, dashboardFilters }}
+        name="Messages"
+        component={MessagesListScreen}
+        options={{ title: "Messages" }}
+      />
+      <Tab.Screen
         name="Favorite"
         component={MotorcycleFavoritesScreen}
+        initialParams={{ filters, dashboardFilters }}
       />
       <Tab.Screen
-        options={{ headerShown: false }}
-        initialParams={{ filters, dashboardFilters }}
         name="Book"
         component={MotorcycleBookScreen}
+        initialParams={{ filters, dashboardFilters }}
       />
       <Tab.Screen
-        options={{ headerShown: false }}
-        initialParams={{ filters, dashboardFilters }}
         name="Account"
         component={ProfilePage}
+        initialParams={{ filters, dashboardFilters }}
       />
     </Tab.Navigator>
   );
