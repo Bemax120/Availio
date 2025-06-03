@@ -18,7 +18,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db, storage } from "../firebase/firebaseConfig";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
-import { ref, uploadString, getDownloadURL } from "firebase/storage";
+import { ref, uploadString, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 
 const defaultProfileImage = require("../assets/download.png");
 
@@ -30,6 +30,7 @@ const ProfilePage = ({ route }) => {
   const [phoneNum, setPhoneNum] = useState("");
   const navigation = useNavigation();
   const auth = getAuth();
+
 
   useEffect(() => {
     if (!auth.currentUser) {
@@ -54,9 +55,7 @@ const ProfilePage = ({ route }) => {
         const data = userDoc.data();
         setUser({
           ...data,
-          profileImage:
-            data.profileImage ||
-            Image.resolveAssetSource(defaultProfileImage).uri,
+          profileImage: data.profilePicture || Image.resolveAssetSource(defaultProfileImage).uri,
         });
         setPhoneNum(data.phoneNum || "");
       }
@@ -67,60 +66,64 @@ const ProfilePage = ({ route }) => {
     }
   };
 
+
   useEffect(() => {
     fetchUserData();
   }, []);
 
   const uploadImage = async (folder) => {
     try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert("Permission Denied", "Grant access to upload images.");
+        Alert.alert("Permission Denied", "Please grant access to upload images.");
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
+        quality: 0.7,
       });
 
       if (result.canceled) return;
 
-      const imageUri = result.assets[0].uri;
+      const image = result.assets[0];
+      const imageUri = image.uri;
+
       const userId = auth.currentUser?.uid;
       if (!userId) {
         Alert.alert("Error", "You must be logged in.");
         return;
       }
 
-      const base64Data = await FileSystem.readAsStringAsync(imageUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
 
-      const imageRef = ref(
-        storage,
+      const filePath =
         folder === "profile_pictures"
-          ? `profile_pictures/personal/${userId}`
-          : `verification_docs/${userId}`
-      );
+          ? `profile_pictures/personal/${userId}.jpg`
+          : `verification_docs/${userId}.jpg`;
 
-      await uploadString(imageRef, base64Data, "base64");
+      const imageRef = ref(storage, filePath);
+      await uploadBytesResumable(imageRef, blob);
 
       const downloadURL = await getDownloadURL(imageRef);
 
       const fieldName =
-        folder === "profile_pictures" ? "profilePicture" : "verificationDoc";
+        folder === "profile_pictures" ? "profileImage" : "verificationDoc";
 
       await updateDoc(doc(db, "users", userId), {
         [fieldName]: downloadURL,
       });
 
-      fetchUserData();
-      Alert.alert("Success", "Upload complete.");
+      if (typeof fetchUserData === "function") {
+        fetchUserData();
+      }
+
+      Alert.alert("Success", "Image uploaded and saved!");
     } catch (error) {
       console.error("❌ Upload error:", error);
-      Alert.alert("Error", "Upload failed. Try again.");
+      Alert.alert("Upload Failed", error.message || "Something went wrong. Try again.");
     }
   };
 
