@@ -3,7 +3,7 @@ import "dotenv/config";
 export default {
   expo: {
     name: "Availio",
-    slug: "Availio",
+    slug: "rent-vehicle",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
@@ -34,9 +34,10 @@ export default {
     },
     extra: {
       eas: {
-        projectId: "9bbdb06a-b6f5-46d1-a729-e2cfe84bfd38",
+        projectId: "6d8cccef-f91c-489c-a26a-383f2d10458e",
       },
     },
     plugins: ["expo-font"],
+    "owner": "bemax159"
   },
 };
