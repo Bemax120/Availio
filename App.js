@@ -33,7 +33,7 @@ import FilterScreen from "./components/FilterScreen";
 import { MapProvider } from "./context/MapContext";
 LogBox.ignoreAllLogs();
 import MessagesListScreen from "./components/MessagesListScreen";
-LogBox.ignoreAllLogs(); // temporarily if needed
+LogBox.ignoreAllLogs();
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -139,6 +139,18 @@ const App = () => {
           <Stack.Screen name="MapBusinessScreen" component={MapBusinessScreen} options={{ headerShown: false }} />
           <Stack.Screen name="DateTimePicker" component={DateTimePickerScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Filter" component={EnhancedFilterScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="DashboardFilter" component={FilterScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="MotorcycleList" component={MotorcycleListScreen} options={{ headerShown: false }} />
+
+          <Stack.Screen name="Rating" component={RatingScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="PaymentDetails" component={PaymentDetailsScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Inquire" component={InquireScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Messages" component={ChatScreen} options={{ headerShown: false }} />
 
           {/* 🔐 Auth Screens - Only when not logged in */}
           {!isLoggedIn && (
@@ -151,20 +163,9 @@ const App = () => {
               <Stack.Screen name="Register" component={RegisterScreen} />
             </>
           )}
-
-          {/* 🔒 Protected Screens - Only when logged in */}
           {isLoggedIn && (
             <>
-              <Stack.Screen name="DashboardFilter" component={FilterScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="MotorcycleList" component={MotorcycleListScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="Rating" component={RatingScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="PaymentDetails" component={PaymentDetailsScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="Inquire" component={InquireScreen} options={{ headerShown: false }} />
-              <Stack.Screen name="Chat" component={ChatScreen} options={{ headerShown: false }} />
+
             </>
           )}
         </Stack.Navigator>

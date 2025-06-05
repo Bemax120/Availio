@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,8 +13,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth } from "firebase/auth";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 
 const MotorcycleBookScreen = ({ route }) => {
   const [bookings, setBookings] = useState([]);
@@ -45,72 +46,57 @@ const MotorcycleBookScreen = ({ route }) => {
     }
   }, [auth.currentUser]);
 
-  useEffect(() => {
-    if (!userId) return;
+  useFocusEffect(
+    useCallback(() => {
+      if (!userId) return;
 
-    setLoading(true);
-    const myBookingRef = collection(db, "users", userId, "myBooking");
+      setLoading(true);
+      const myBookingRef = collection(db, "users", userId, "myBooking");
 
-    const unsubscribe = onSnapshot(myBookingRef, async (snapshot) => {
-      const bookingPromises = snapshot.docs.map(async (docSnap) => {
-        const bookingId = docSnap.id;
-        const bookingRef = doc(db, "bookings", bookingId);
-        const bookingSnap = await getDoc(bookingRef);
+      const unsubscribe = onSnapshot(myBookingRef, async (snapshot) => {
+        const bookingPromises = snapshot.docs.map(async (docSnap) => {
+          const bookingId = docSnap.id;
+          const bookingRef = doc(db, "bookings", bookingId);
+          const bookingSnap = await getDoc(bookingRef);
 
-        if (!bookingSnap.exists()) return null;
+          if (!bookingSnap.exists()) return null;
 
-        const bookingData = bookingSnap.data();
+          const bookingData = bookingSnap.data();
 
-        const vehicleRef = doc(db, "vehicles", bookingData.vehicleId);
-        const vehicleSnap = await getDoc(vehicleRef);
+          const vehicleRef = doc(db, "vehicles", bookingData.vehicleId);
+          const vehicleSnap = await getDoc(vehicleRef);
+          if (!vehicleSnap.exists()) return null;
 
-        if (!vehicleSnap.exists()) return null;
+          const ownerData = vehicleSnap.data();
+          const ownerRef = doc(db, "users", ownerData.ownerId);
+          const ownerSnap = await getDoc(ownerRef);
 
-        const ownerData = vehicleSnap.data();
+          return {
+            id: bookingId,
+            bike: vehicleSnap.data().name,
+            image: vehicleSnap.data().defaultImg,
+            date: formatDateTime(bookingData.createdAt),
+            status: bookingData.bookingStatus,
+            total: bookingData.totalPrice,
+            rated: bookingData.rated,
+            businessName: ownerSnap.exists() ? ownerSnap.data().businessName : null,
+            businessProfile: ownerSnap.exists() ? ownerSnap.data().businessProfile : null,
+            businessEmail: ownerSnap.exists() ? ownerSnap.data().businessEmail : null,
+            businessAddress: ownerSnap.exists() ? ownerSnap.data().businessAddress : null,
+            emailVerified: ownerSnap.exists() ? ownerSnap.data().businessVerified : null,
+            contactNumber: ownerSnap.exists() ? ownerSnap.data().contactNumber : null,
+          };
+        });
 
-        const ownerRef = doc(db, "users", ownerData.ownerId);
-        const ownerSnap = await getDoc(ownerRef);
-
-        return {
-          id: bookingId,
-          bike: vehicleSnap.exists()
-            ? vehicleSnap.data().name
-            : "Unknown Vehicle",
-          image: vehicleSnap.exists() ? vehicleSnap.data().defaultImg : null,
-          date: formatDateTime(bookingData.createdAt),
-          status: bookingData.bookingStatus,
-          total: bookingData.totalPrice,
-          rated: bookingData.rated,
-          businessName: ownerSnap.exists()
-            ? ownerSnap.data().businessName
-            : null,
-          businessProfile: ownerSnap.exists()
-            ? ownerSnap.data().businessProfile
-            : null,
-          businessEmail: ownerSnap.exists()
-            ? ownerSnap.data().businessEmail
-            : null,
-          businessAddress: ownerSnap.exists()
-            ? ownerSnap.data().businessAddress
-            : null,
-          emailVerified: ownerSnap.exists()
-            ? ownerSnap.data().businessVerified
-            : null,
-          contactNumber: ownerSnap.exists()
-            ? ownerSnap.data().contactNumber
-            : null,
-        };
+        const resolvedBookings = (await Promise.all(bookingPromises)).filter(Boolean);
+        setBookings(resolvedBookings);
+        setLoading(false);
       });
 
-      const resolvedBookings = (await Promise.all(bookingPromises)).filter(
-        Boolean
-      );
-      setBookings(resolvedBookings);
-      setLoading(false);
-    });
+      return () => unsubscribe();
+    }, [userId, filter])
+  );
 
-    return () => unsubscribe();
-  }, [userId, filter]);
 
   const formatDateTime = (value) => {
     if (!value) return "Invalid date";
@@ -316,7 +302,7 @@ const styles = StyleSheet.create({
     color: "#aaa",
   },
   screenTitle: {
-    fontSize: 28,
+    fontSize: 23,
     fontWeight: "800",
     color: "#333",
     paddingHorizontal: 20,

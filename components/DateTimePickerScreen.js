@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { Picker } from "@react-native-picker/picker";
 import { useRoute } from "@react-navigation/native";
+import useFilterStore from "../context/filterStore";
 
 export default function DateTimePickerScreen({ navigation }) {
   const route = useRoute();
@@ -57,21 +58,20 @@ export default function DateTimePickerScreen({ navigation }) {
   };
 
   const confirmSelection = () => {
-    if (!startDate || !endDate) {
-      Alert.alert("Missing Info", "Please select a start and end date.");
-      return;
-    }
+  if (!startDate || !endDate) {
+    Alert.alert("Missing Info", "Please select a start and end date.");
+    return;
+  }
 
-    navigation.navigate("Filter", {
-      startDate,
-      endDate,
-      pickUpTime,
-      returnTime,
-      vehicleType,
-      locationFilter,
-      locationAddress,
-    });
-  };
+  useFilterStore.setState({
+    startDate,
+    endDate,
+    pickUpTime,
+    returnTime,
+  });
+
+  navigation.goBack(); 
+};
 
   return (
     <View style={styles.container}>

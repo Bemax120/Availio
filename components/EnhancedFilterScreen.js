@@ -1,31 +1,22 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import useFilterStore from "../context/filterStore";
 
 const EnhancedFilterScreen = () => {
   const navigation = useNavigation();
-  const route = useRoute();
-  const filters = route?.params?.filters || {};
-
-  const locationAddress = route.params?.locationAddress || null;
-
-  const locationFilter = route.params?.locationFilter || null;
-  const startDate = route.params?.startDate;
-  const endDate = route.params?.endDate;
-  const pickUpTime = route.params?.pickUpTime;
-  const returnTime = route.params?.returnTime;
-
-  const [vehicleType, setVehicleType] = useState(null);
+  const {
+    vehicleType,
+    locationAddress,
+    locationFilter,
+    startDate,
+    endDate,
+    pickUpTime,
+    returnTime,
+    setVehicleType,
+  } = useFilterStore();
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
@@ -41,45 +32,33 @@ const EnhancedFilterScreen = () => {
   const formattedEnd = formatDate(endDate);
 
   const applyFilters = () => {
-    const filters = {
-      vehicleType,
-      locationAddress,
-      locationFilter,
-      startDate,
-      endDate,
-      pickUpTime,
-      returnTime,
-    };
+    if (!locationAddress || locationAddress === "Near Me") {
+      Alert.alert("Address is empty", "Please Select A Location!");
+      return;
+    }
 
-    if(locationAddress == "Near Me" ||locationAddress == null ){
-        Alert.alert("Address is empty", "Please Select A Location!");
-        return;
-      }else{
-        
-        if (!startDate || !endDate || !pickUpTime || !returnTime) {
-          Alert.alert("No Booking Date", "Please Select A Booking Date!");
-          return;
-          Alert.alert("Address is empty", "Please Select A Location!");
-        return;
-         }
-      }
-    
-    navigation.replace("HomeTabs", { filters });
+    if (!startDate || !endDate || !pickUpTime || !returnTime) {
+      Alert.alert("No Booking Date", "Please Select A Booking Date!");
+      return;
+    }
+
+    navigation.replace("HomeTabs", {
+      filters: {
+        vehicleType,
+        locationAddress,
+        locationFilter,
+        startDate,
+        endDate,
+        pickUpTime,
+        returnTime,
+      },
+    });
   };
 
-  let topGradient = "";
-  let bottomGradient = "";
-
-  if (vehicleType === "2 Wheels") {
-    topGradient = "#ffa3a6";
-    bottomGradient = "#ffeded";
-  } else if (vehicleType === "4 Wheels") {
-    topGradient = "#6497b1";
-    bottomGradient = "#b3cde0";
-  } else {
-    topGradient = "#E4A0F7";
-    bottomGradient = "#D7BFDC";
-  }
+  const topGradient = vehicleType === "2 Wheels" ? "#ffa3a6" :
+                      vehicleType === "4 Wheels" ? "#6497b1" : "#E4A0F7";
+  const bottomGradient = vehicleType === "2 Wheels" ? "#ffeded" :
+                         vehicleType === "4 Wheels" ? "#b3cde0" : "#D7BFDC";
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -89,49 +68,21 @@ const EnhancedFilterScreen = () => {
         end={{ x: 0.5, y: 1 }}
         style={styles.headerContainer}
       >
-        <Text
-          style={{
-            fontSize: 20,
-            fontFamily: "Inter-Semibold",
-            marginTop: 10,
-          }}
-        >
-          Preference
-        </Text>
-
+        <Text style={styles.headerText}>Preference</Text>
         {vehicleType === "2 Wheels" ? (
-          <MaterialIcons
-            style={{ position: "absolute", bottom: 30, right: 25 }}
-            name="two-wheeler"
-            size={75}
-            color="red"
-          />
+          <MaterialIcons name="two-wheeler" size={75} color="red" style={styles.vehicleIcon} />
         ) : vehicleType === "4 Wheels" ? (
-          <Ionicons
-            style={{ position: "absolute", bottom: 30, right: 25 }}
-            name="car-sport"
-            size={75}
-            color="blue"
-          />
+          <Ionicons name="car-sport" size={75} color="blue" style={styles.vehicleIcon} />
         ) : (
           <>
-            <MaterialIcons
-              style={{ position: "absolute", bottom: 30, right: 25 }}
-              name="two-wheeler"
-              size={75}
-              color="#702963"
-            />
-            <Ionicons
-              style={{ position: "absolute", bottom: 30, right: 100 }}
-              name="car-sport"
-              size={75}
-              color="#702963"
-            />
+            <MaterialIcons name="two-wheeler" size={75} color="#702963" style={[styles.vehicleIcon, { right: 100 }]} />
+            <Ionicons name="car-sport" size={75} color="#702963" style={styles.vehicleIcon} />
           </>
         )}
       </LinearGradient>
 
       <View style={styles.container}>
+        {/* Location Button */}
         <TouchableOpacity
           style={styles.mapButton}
           onPress={() =>
@@ -144,45 +95,25 @@ const EnhancedFilterScreen = () => {
             })
           }
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 5,
-              paddingVertical: 4,
-            }}
-          >
+          <View style={styles.row}>
             <Ionicons name="search" size={20} color="gray" />
-            {locationAddress ? null : (
-              <Text style={styles.mapButtonText}>Select location</Text>
-            )}
-            {locationAddress && (
-              <Text style={{ maxWidth: 400, color: "#1e293b" }}>
-                ({locationAddress})
-              </Text>
-            )}
+            <Text style={styles.mapButtonText}>
+              {locationAddress ? `(${locationAddress})` : "Select location"}
+            </Text>
           </View>
-
           <Ionicons name="send" size={20} color="black" />
         </TouchableOpacity>
 
+        {/* Booking Date Button */}
         <TouchableOpacity
-          style={{
-            flexDirection: "row",
-            backgroundColor: "#ECECEC",
-            paddingHorizontal: 12,
-            paddingVertical: 16,
-            borderRadius: 100,
-            gap: 5,
-            marginBottom: 20,
-          }}
-          onPress={() => {
+          style={styles.dateButton}
+          onPress={() =>
             navigation.navigate("DateTimePicker", {
               vehicleType,
               locationFilter,
               locationAddress,
-            });
-          }}
+            })
+          }
         >
           <Ionicons name="calendar" size={20} color="gray" />
           <Text style={styles.mapButtonText}>
@@ -192,55 +123,22 @@ const EnhancedFilterScreen = () => {
           </Text>
         </TouchableOpacity>
 
+        {/* Selected Date Preview */}
         {startDate && endDate && pickUpTime && returnTime && (
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 20,
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: "#ECECEC",
-                paddingVertical: 12,
-                paddingHorizontal: 24,
-                borderRadius: 100,
-                flexDirection: "row",
-                gap: 5,
-              }}
-            >
+          <View style={styles.datePreviewRow}>
+            <View style={styles.dateBadge}>
               <Ionicons name="time" size={20} color="gray" />
               <Text>{formattedStart}</Text>
             </View>
-
-            <View
-              style={{
-                backgroundColor: "#ECECEC",
-                paddingVertical: 12,
-                paddingHorizontal: 24,
-                borderRadius: 100,
-                flexDirection: "row",
-                gap: 5,
-              }}
-            >
+            <View style={styles.dateBadge}>
               <Ionicons name="time" size={20} color="gray" />
               <Text>{formattedEnd}</Text>
             </View>
           </View>
         )}
 
-        <View
-          style={{
-            flexDirection: "row",
-            backgroundColor: "#ECECEC",
-            paddingHorizontal: 16,
-            borderRadius: 100,
-            gap: 5,
-            marginBottom: 20,
-            alignItems: "center",
-          }}
-        >
+        {/* Vehicle Type Picker */}
+        <View style={styles.pickerContainer}>
           <Picker
             selectedValue={vehicleType}
             onValueChange={(itemValue) => setVehicleType(itemValue)}
@@ -252,13 +150,11 @@ const EnhancedFilterScreen = () => {
           </Picker>
         </View>
 
-        <View
-          style={{ flexDirection: "row", justifyContent: "center", gap: 12 }}
-        >
+        {/* Buttons */}
+        <View style={styles.bottomButtonRow}>
           <TouchableOpacity
             onPress={() =>
               navigation.navigate("MapBusinessScreen", {
-                filters,
                 vehicleType,
                 locationAddress,
                 startDate,
@@ -268,17 +164,11 @@ const EnhancedFilterScreen = () => {
                 screen: "Filter",
               })
             }
-            style={{
-              paddingHorizontal: 12,
-              borderColor: "gray",
-              borderWidth: 1,
-              justifyContent: "center",
-              alignContent: "center",
-              borderRadius: 100,
-            }}
+            style={styles.mapIconButton}
           >
             <Ionicons name="map" size={20} color="red" />
           </TouchableOpacity>
+
           <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
             <Text style={styles.applyButtonText}>Search</Text>
           </TouchableOpacity>
@@ -288,47 +178,28 @@ const EnhancedFilterScreen = () => {
   );
 };
 
-export default EnhancedFilterScreen;
-
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     backgroundColor: "#f8f8f8",
   },
-  mapButton: {
-    backgroundColor: "#ECECEC",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 12,
-    borderRadius: 100,
-    marginBottom: 20,
-    gap: 5,
-  },
-  mapButtonText: {
-    color: "#3f3f3f",
-    fontSize: 16,
-  },
-  selectedLocationText: {
-    textAlign: "center",
-    fontSize: 14,
-    flexWrap: "nowrap",
-    overflow: "hidden",
-    zIndex: -1,
-    color: "#444",
-  },
   headerContainer: {
-    position: "relative",
     height: 150,
     padding: 16,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     justifyContent: "center",
+    position: "relative",
   },
   headerText: {
     fontSize: 20,
-    fontWeight: "bold",
-    color: "#00000",
+    fontFamily: "Inter-Semibold",
+    marginTop: 10,
+  },
+  vehicleIcon: {
+    position: "absolute",
+    bottom: 30,
+    right: 25,
   },
   container: {
     flex: 1,
@@ -343,22 +214,69 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
+  mapButton: {
+    backgroundColor: "#ECECEC",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 12,
+    borderRadius: 100,
+    marginBottom: 20,
+  },
+  dateButton: {
+    flexDirection: "row",
+    backgroundColor: "#ECECEC",
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    borderRadius: 100,
+    gap: 5,
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  mapButtonText: {
+    color: "#3f3f3f",
+    fontSize: 16,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  datePreviewRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  dateBadge: {
+    backgroundColor: "#ECECEC",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 100,
+    flexDirection: "row",
+    gap: 5,
+    alignItems: "center",
+  },
+  pickerContainer: {
+    backgroundColor: "#ECECEC",
+    paddingHorizontal: 16,
+    borderRadius: 100,
+    marginBottom: 20,
+  },
   picker: {
     width: "100%",
   },
-  subHeader: {
-    fontSize: 18,
-    color: "#333",
-    marginBottom: 20,
-    textAlign: "center",
+  bottomButtonRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
   },
-  filterSection: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 8,
+  mapIconButton: {
+    paddingHorizontal: 12,
+    borderColor: "gray",
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 100,
   },
   applyButton: {
     flex: 1,
@@ -373,3 +291,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+
+export default EnhancedFilterScreen;

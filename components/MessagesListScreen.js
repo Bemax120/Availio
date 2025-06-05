@@ -19,30 +19,52 @@ import {
   doc,
   getDoc,
 } from 'firebase/firestore';
+import { useNavigation } from "@react-navigation/native";
 
-export default function MessagesListScreen({ navigation }) {
-  const [threads, setThreads]     = useState([]);
-  const [profiles, setProfiles]   = useState({});
-  const [loading, setLoading]     = useState(true);
+export default function MessagesListScreen({ route }) {
+  const [threads, setThreads] = useState([]);
+  const [profiles, setProfiles] = useState({});
+  const [loading, setLoading] = useState(true);
   const uid = auth.currentUser?.uid;
 
-  // 1) Subscribe to your conversations
+  const navigation = useNavigation();
+  const filters = route?.params?.filters || {};
+
+  // Redirect to Login if not authenticated
+  useEffect(() => {
+    if (!auth.currentUser) {
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: "Login",
+            params: { filters },
+          },
+        ],
+      });
+    }
+  }, [auth.currentUser]);
+
+  // Fetch conversations
   useEffect(() => {
     if (!uid) return;
+
     const q = query(
       collection(db, 'conversations'),
       where('participants', 'array-contains', uid),
       orderBy('lastMessageTime', 'desc')
     );
+
     const unsub = onSnapshot(q, snap => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setThreads(data);
       setLoading(false);
     });
+
     return unsub;
   }, [uid]);
 
-  // 2) Fetch missing user profiles
+  // Fetch missing user profiles
   useEffect(() => {
     const otherIds = Array.from(
       new Set(
@@ -51,24 +73,29 @@ export default function MessagesListScreen({ navigation }) {
           .filter(id => id !== uid)
       )
     );
+
     otherIds.forEach(async otherId => {
       if (!profiles[otherId]) {
-        const docSnap = await getDoc(doc(db, 'users', otherId));
-        if (docSnap.exists()) {
-          setProfiles(p => ({ ...p, [otherId]: docSnap.data() }));
-        } else {
-          setProfiles(p => ({ ...p, [otherId]: { firstName: 'Unknown', lastName: '' } }));
+        try {
+          const docSnap = await getDoc(doc(db, 'users', otherId));
+          setProfiles(prev => ({
+            ...prev,
+            [otherId]: docSnap.exists()
+              ? docSnap.data()
+              : { firstName: 'Unknown', lastName: '' },
+          }));
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
         }
       }
     });
-  }, [threads, profiles, uid]);
+  }, [threads, uid]);
 
-  // 3) Render each thread as a card
   const renderItem = ({ item }) => {
     const otherId = item.participants.find(i => i !== uid);
-    const user   = profiles[otherId] || {};
-    const fullName = user.firstName
-      ? `${user.firstName} ${user.lastName}`
+    const user = profiles[otherId] || {};
+    const fullName = user.businessName
+      ? `${user.businessName}`
       : otherId;
     const initial = fullName.charAt(0).toUpperCase();
 
@@ -77,7 +104,7 @@ export default function MessagesListScreen({ navigation }) {
         style={styles.threadCard}
         onPress={() =>
           navigation.navigate('Chat', {
-            otherUserId:  otherId,
+            otherUserId: otherId,
             businessName: fullName,
           })
         }
@@ -124,8 +151,14 @@ export default function MessagesListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F2F3F5' },
-  loader:    { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: {
+    flex: 1,
+    paddingTop: 40,
+    flexDirection: "column",
+    backgroundColor: "#FCFBF4",
+    position: "relative",
+  },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     fontSize: 24,
     fontWeight: '700',
@@ -134,36 +167,34 @@ const styles = StyleSheet.create({
   },
   threadCard: {
     flexDirection: 'row',
-    alignItems:    'center',
+    alignItems: 'center',
     backgroundColor: '#fff',
     marginHorizontal: 16,
-    marginVertical:   8,
-    padding:         12,
-    borderRadius:    8,
-    // Android shadow
+    marginVertical: 8,
+    padding: 12,
+    borderRadius: 8,
     elevation: 2,
-    // iOS shadow
-    shadowColor:    '#000',
-    shadowOffset:   { width: 0, height: 1 },
-    shadowOpacity:  0.1,
-    shadowRadius:   2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   avatar: {
-    width:  48,
+    width: 48,
     height: 48,
     borderRadius: 24,
   },
   avatarPlaceholder: {
-    width:  48,
+    width: 48,
     height: 48,
     borderRadius: 24,
     backgroundColor: '#2E3B5B',
-    justifyContent:   'center',
-    alignItems:       'center',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   initial: {
     fontSize: 20,
-    color:    '#fff',
+    color: '#fff',
     fontWeight: '600',
   },
   textContainer: {
@@ -171,22 +202,22 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   threadTitle: {
-    fontSize:     16,
-    fontWeight:   '600',
-    color:        '#222',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#222',
   },
   threadLastMessage: {
-    fontSize:    14,
-    color:       '#666',
-    marginTop:   4,
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
   empty: {
-    flex:          1,
-    justifyContent:'center',
-    alignItems:    'center',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: 16,
-    color:    '#666',
+    color: '#666',
   },
 });

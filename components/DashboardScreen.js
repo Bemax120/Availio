@@ -29,6 +29,7 @@ import Toast from "react-native-toast-message";
 import Modal from "react-native-modal";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 
+
 const calculateDistance = (loc1, loc2) => {
   const toRad = (value) => (value * Math.PI) / 180;
   const R = 6371; // Earth's radius in km
@@ -330,6 +331,7 @@ const DashboardScreen = ({ route }) => {
       return () => unsubscribe();
     }, [fetchScooters])
   );
+  
 
   // Handle pull to refresh
   const onRefresh = useCallback(() => {

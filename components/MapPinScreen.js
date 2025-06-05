@@ -13,8 +13,9 @@ import MapView from "react-native-maps";
 import * as Location from "expo-location";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
-import debounce from "lodash.debounce"; 
+import debounce from "lodash.debounce";
 import { MapContext } from "../context/MapContext";
+import useFilterStore from "../context/filterStore";
 
 const screen = Dimensions.get("window");
 
@@ -134,15 +135,12 @@ const MapPinScreen = () => {
 
   const handleConfirmLocation = () => {
     if (centerLocation) {
-      navigation.navigate("Filter", {
+      useFilterStore.setState({
         locationFilter: centerLocation,
         locationAddress: address,
-        vehicleType,
-        startDate,
-        endDate,
-        pickUpTime,
-        returnTime,
       });
+
+      navigation.goBack();
     } else {
       Alert.alert("Location not selected");
     }
@@ -202,7 +200,7 @@ const MapPinScreen = () => {
       {location ? (
         <MapView
           ref={mapRef}
-          style={{ flex: 1   }}
+          style={{ flex: 1 }}
           initialRegion={location}
           onRegionChangeComplete={handleRegionChangeComplete}
           onMapReady={() => setMapReady(true)}
@@ -219,14 +217,14 @@ const MapPinScreen = () => {
       </View>
 
       <View style={styles.currentLocationWrapper}>
-          <TouchableOpacity onPress={goToCurrentLocation} style={styles.currentLocationButton}>
-            <Image
-              source={require('../assets/gps-icon.png')} // use your own icon
-              style={{ width: 24, height: 24 }}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={goToCurrentLocation} style={styles.currentLocationButton}>
+          <Image
+            source={require('../assets/gps-icon.png')} // use your own icon
+            style={{ width: 24, height: 24 }}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.addressContainer}>
         {loadingAddress ? (
@@ -300,11 +298,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  
+
   textInput: {
     fontSize: 16,
   },
-  
+
   searchContainer: {
     position: "absolute",
     top: 50,
